@@ -186,10 +186,10 @@ def get_context_retriever_chain(vector_store):
     # Use similarity search instead of mmr
     retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
     
-    st.write("Testing Retriever: Fetching Context...")
+    # st.write("Testing Retriever: Fetching Context...")
     test_query = "What services are available for citizens?"
     retrieved_docs = retriever.get_relevant_documents(test_query)
-    st.write(f"Retrieved {len(retrieved_docs)} documents for test query.")
+    # st.write(f"Retrieved {len(retrieved_docs)} documents for test query.")
     
     prompt_template = """You are a knowledgeable and helpful assistant with expertise in the subject matter.
 
@@ -228,7 +228,7 @@ def get_response(user_input):
     
     retriever_chain = get_context_retriever_chain(vector_store)
     try:
-        st.write("Debug: Calling Retriever Chain...")
+        # st.write("Debug: Calling Retriever Chain...")
         # Invoke with only the query (language removed)
         response = retriever_chain.invoke({"query": user_input})
         # st.write(f"Debug: Response received - {response}")
@@ -258,7 +258,7 @@ else:
     st.session_state.recorded_audio = audio_bytes
     file_path = bhashini_master.save_audio_as_wav(audio_bytes, directory="output", file_name="last_recording.wav")
     detected_audio_language = fallback_language_code
-    st.write(f"Detected audio language: {detected_audio_language}")
+    # st.write(f"Detected audio language: {detected_audio_language}")
     transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=detected_audio_language)
     if transcribed_text:
         st.write(f"Transcribed Audio: {transcribed_text}")
@@ -277,7 +277,7 @@ if user_query:
     except Exception:
         detected_text_language = fallback_language_code
     detected_text_language = fallback_language_code  # Using fallback for consistency
-    st.write(f"Detected text language: {detected_text_language}")   
+    # st.write(f"Detected text language: {detected_text_language}")   
     with st.spinner("Generating response..."):
         response = get_response(user_query)
         st.session_state.chat_history.append(HumanMessage(content=user_query))
