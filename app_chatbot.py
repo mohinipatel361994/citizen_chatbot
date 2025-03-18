@@ -175,7 +175,7 @@ def load_faiss_vectorstore():
         if vector_store.index.d != expected_dim:
             st.error(f"Dimension mismatch: expected {expected_dim}, but index has {vector_store.index.d}. Please rebuild the FAISS index.")
             return None
-        st.success("FAISS index loaded successfully!")
+        # st.success("FAISS index loaded successfully!")
         return vector_store
     except Exception as e:
         st.error(f"Failed to load FAISS index: {e}")
