@@ -265,6 +265,8 @@ else:
         response = get_response(transcribed_text)
         st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
         st.session_state.chat_history.append(AIMessage(content=response))
+        st.markdown(f"**You:** {transcribed_text}")
+        st.markdown(f"🤖 **Bot:** {response}")
         bhashini_master.speak(response, source_language=detected_audio_language)
     else:
         st.write("Error: Audio transcription failed.")
@@ -282,6 +284,8 @@ if user_query:
         response = get_response(user_query)
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         st.session_state.chat_history.append(AIMessage(content=response))
+        st.markdown(f"**You:** {user_query}")
+        st.markdown(f"🤖 **Bot:** {response}")
         bhashini_master.speak(response, source_language=language_code)
 
 # Sidebar for Chat History
