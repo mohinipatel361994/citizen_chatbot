@@ -137,9 +137,9 @@ languages = {
     # "Punjabi": "pa",
     # "Telugu": "te",
 }
-# selected_language = st.selectbox("Select the language for Question:", options=list(languages.keys()))
+selected_language = st.selectbox("Query language:", options=list(languages.keys()))
 language_code = languages[selected_language]
-st.write(f"Selected language: {selected_language}")
+# st.write(f"Selected language: {selected_language}")
 fallback_language_code = languages[selected_language]
 
 api_key = st.secrets["secret_section"]["openai_api_key"]
