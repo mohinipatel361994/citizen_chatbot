@@ -236,7 +236,7 @@ def get_response(user_input):
         result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
         source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
         
-        final_response = f"Based on the information I have, here's the answer to your question: \n{result}"
+        final_response = f"{result}"
         if source_urls:
             final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
         else:
