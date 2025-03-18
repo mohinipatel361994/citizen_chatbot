@@ -133,9 +133,9 @@ st.title("Citizen Service Chatbot")
 languages = {
     "English": "en",
     "Hindi": "hi",
-    "Bengali": "bn",
-    "Punjabi": "pa",
-    "Telugu": "te",
+    # "Bengali": "bn",
+    # "Punjabi": "pa",
+    # "Telugu": "te",
 }
 selected_language = st.selectbox("Select the language for Question:", options=list(languages.keys()))
 language_code = languages[selected_language]
