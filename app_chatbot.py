@@ -285,7 +285,7 @@ if user_query:
         bhashini_master.speak(response, source_language=language_code)
 
 # Sidebar for Chat History
-st.sidebar.title("Chat History")
+# st.sidebar.title("Chat History")
 footer = """
     <div class="footer">
         <p style="text-align: left;">Copyright © 2024 Citizen Services. All rights reserved.</p>
