@@ -119,7 +119,7 @@ st.markdown(
     """<div class="title">Welcome to the Citizen Service Chatbot!</div>""",
     unsafe_allow_html=True
 )
-st.markdown("This tool allows you to interact with our citizen services through a conversational AI. You can either speak or type your query.")
+# st.markdown("This tool allows you to interact with our citizen services through a conversational AI. You can either speak or type your query.")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
@@ -127,7 +127,7 @@ if "chat_history" not in st.session_state:
 # Load environment variables
 load_dotenv()
 
-st.title("Citizen Service Chatbot")
+# st.title("Citizen Service Chatbot")
 
 # Available languages for selection
 languages = {
@@ -137,7 +137,7 @@ languages = {
     # "Punjabi": "pa",
     # "Telugu": "te",
 }
-selected_language = st.selectbox("Select the language for Question:", options=list(languages.keys()))
+# selected_language = st.selectbox("Select the language for Question:", options=list(languages.keys()))
 language_code = languages[selected_language]
 st.write(f"Selected language: {selected_language}")
 fallback_language_code = languages[selected_language]
