@@ -311,6 +311,12 @@ with st.sidebar:
     if st.button("Clear Chat History"):
         st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
             # Reset audio-related session state
+        if "recorded_audio" in st.session_state:
+            del st.session_state["recorded_audio"]
+        if "transcribed_text" in st.session_state:
+            del st.session_state["transcribed_text"]
+        
+        # Delete the saved WAV file if it exists
         audio_file_path = os.path.join(os.getcwd(), "output", "last_recording.wav")
         if os.path.exists(audio_file_path):
             os.remove(audio_file_path)
