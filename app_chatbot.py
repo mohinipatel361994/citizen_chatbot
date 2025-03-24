@@ -285,7 +285,7 @@ if user_query:
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**You:** {user_query}")
-        st.markdown(f"🤖 **Bot:** {response}")
+        st.markdown(f"🤖 **AI_Sarathi:** {response}")
         bhashini_master.speak(response, source_language=language_code)
 
 # Sidebar for Chat History
@@ -305,7 +305,7 @@ with st.sidebar:
             if isinstance(message, HumanMessage):
                 st.markdown(f"**You:** {message.content}")
             elif isinstance(message, AIMessage):
-                st.markdown(f"🤖 **Bot:** {message.content}")
+                st.markdown(f"🤖 **AI_Sarathi:** {message.content}")
     if st.button("Clear Chat History"):
         st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
         st.experimental_rerun()
