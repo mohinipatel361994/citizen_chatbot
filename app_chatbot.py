@@ -266,8 +266,9 @@ else:
         st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**You:** {transcribed_text}")
-        st.markdown(f"🤖 **AI_Sarathi:** {response}")
+        st.markdown(f"🤖 **Mitra:** {response}")
         bhashini_master.speak(response, source_language=detected_audio_language)
+        st.warning("Please record some audio to proceed.")
     else:
         st.write("Error: Audio transcription failed.")
 
@@ -285,7 +286,7 @@ if user_query:
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**You:** {user_query}")
-        st.markdown(f"🤖 **AI_Sarathi:** {response}")
+        st.markdown(f"🤖 **Mitra:** {response}")
         bhashini_master.speak(response, source_language=language_code)
 
 # Sidebar for Chat History
@@ -305,9 +306,14 @@ with st.sidebar:
             if isinstance(message, HumanMessage):
                 st.markdown(f"**You:** {message.content}")
             elif isinstance(message, AIMessage):
-                st.markdown(f"🤖 **AI_Sarathi:** {message.content}")
+                st.markdown(f"🤖 **Mitra:** {message.content}")
     if st.button("Clear Chat History"):
         st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
-        st.experimental_rerun()
+            # Reset audio-related session state
+        if "recorded_audio" in st.session_state:
+            del st.session_state["recorded_audio"]
+        if "transcribed_text" in st.session_state:
+            del st.session_state["transcribed_text"]
+        st.rerun()
 
 st.markdown(footer, unsafe_allow_html=True)
