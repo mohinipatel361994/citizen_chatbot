@@ -233,15 +233,15 @@ def get_response(user_input):
         response = retriever_chain.invoke({"query": user_input})
         # st.write(f"Debug: Response received - {response}")
         
-        result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
-        source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
+        # result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
+        # source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
         
-        final_response = f"{result}"
-        if source_urls:
-            final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
-        else:
-            final_response += "\n\nNo direct source links were available for this query."
-        return final_response    
+        # final_response = f"{result}"
+        # if source_urls:
+        #     final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
+        # else:
+        #     final_response += "\n\nNo direct source links were available for this query."
+        return response    
     except Exception as e:
         st.error(f"Error occurred: {e}")
         return "Sorry, something went wrong. Please try again later."
