@@ -266,7 +266,7 @@ else:
         st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**You:** {transcribed_text}")
-        st.markdown(f"🤖 **Bot:** {response}")
+        st.markdown(f"🤖 **AI_Sarathi:** {response}")
         bhashini_master.speak(response, source_language=detected_audio_language)
     else:
         st.write("Error: Audio transcription failed.")
