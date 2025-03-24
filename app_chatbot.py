@@ -240,6 +240,9 @@ def get_response(user_input):
         if source_urls:
             final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
         return response    
+        else:
+            # final_response += "\n\nNo direct source links were available for this query."
+            return final_response   
     except Exception as e:
         st.error(f"Error occurred: {e}")
         return "Sorry, something went wrong. Please try again later."
