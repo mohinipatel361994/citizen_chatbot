@@ -262,7 +262,7 @@ else:
     # st.write(f"Detected audio language: {detected_audio_language}")
     transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=detected_audio_language)
     if transcribed_text:
-        # st.write(f"Transcribed Audio: {transcribed_text}")
+        st.write(f"Transcribed Audio: {transcribed_text}")
         response = get_response(transcribed_text)
         st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
         st.session_state.chat_history.append(AIMessage(content=response))
