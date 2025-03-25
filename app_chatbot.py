@@ -38,6 +38,7 @@ def correct_spelling(text, variant_dict, threshold=80):
         else:
             corrected_words.append(word)
     return " ".join(corrected_words)
+    
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
     with open(image_file, "rb") as image:
@@ -245,9 +246,10 @@ Please provide a detailed and well-organized answer that directly addresses the 
     return qa_chain
 
 def get_response(user_input):
-    # st.write(f"Debug: Received query - {user_input}")
+    # Normalize and correct the input query
     norm_query = normalize_text(user_input)
     corrected_query = correct_spelling(norm_query, common_variants)
+    
     vector_store = load_faiss_vectorstore()
     if not vector_store:
         st.error("Vector store not found. Please rebuild the FAISS index.")
@@ -255,10 +257,8 @@ def get_response(user_input):
     
     retriever_chain = get_context_retriever_chain(vector_store)
     try:
-        # st.write("Debug: Calling Retriever Chain...")
-        # Invoke with only the query (language removed)
+        # Use the corrected query for retrieval
         response = retriever_chain.invoke({"query": corrected_query})
-        # st.write(f"Debug: Response received - {response}")
         
         result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
         source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
