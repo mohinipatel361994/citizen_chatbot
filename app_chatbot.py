@@ -11,8 +11,33 @@ from PIL import Image
 import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
+from rapidfuzz import process, fuzz
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
+common_variants = {
+    "seekho": "sikho",
+    # "सरकार्": "सरकार",
+}
 
+def normalize_text(text):
+    """Lowercase and remove extra spaces."""
+    text = text.lower().strip()
+    text = re.sub(r'\s+', ' ', text)
+    return text
+
+def correct_spelling(text, variant_dict, threshold=80):
+    """
+    For each word in text, check for close matches in variant_dict.
+    If the fuzzy match score exceeds the threshold, replace the word.
+    """
+    words = text.split()
+    corrected_words = []
+    for word in words:
+        match, score, _ = process.extractOne(word, variant_dict.keys(), scorer=fuzz.ratio)
+        if score >= threshold:
+            corrected_words.append(variant_dict[match])
+        else:
+            corrected_words.append(word)
+    return " ".join(corrected_words)
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
     with open(image_file, "rb") as image:
@@ -221,6 +246,8 @@ Please provide a detailed and well-organized answer that directly addresses the 
 
 def get_response(user_input):
     # st.write(f"Debug: Received query - {user_input}")
+    norm_query = normalize_text(user_input)
+    corrected_query = correct_spelling(norm_query, common_variants)
     vector_store = load_faiss_vectorstore()
     if not vector_store:
         st.error("Vector store not found. Please rebuild the FAISS index.")
@@ -230,7 +257,7 @@ def get_response(user_input):
     try:
         # st.write("Debug: Calling Retriever Chain...")
         # Invoke with only the query (language removed)
-        response = retriever_chain.invoke({"query": user_input})
+        response = retriever_chain.invoke({"query": corrected_query})
         # st.write(f"Debug: Response received - {response}")
         
         result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
