@@ -11,7 +11,7 @@ from PIL import Image
 import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
-st.set_page_config(page_title="जनसेवा मित्र", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="जनसहायक", page_icon="🤖", layout="wide")
 
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
@@ -102,7 +102,7 @@ with st.container():
          st.markdown(
             """
             <div style="text-align: center; margin-left: 30px;">
-                <h1 style="color:#000080; margin-bottom: 0;">🤖 जनसेवा मित्र</h1>
+                <h1 style="color:#000080; margin-bottom: 0;">🤖 जनसहायक</h1>
                 <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">AI-based chatbot for citizen services</p>
             </div>
             """,
@@ -116,7 +116,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Introductory text
 st.markdown(
-    """<div class="title">Welcome to the जनसेवा मित्र!</div>""",
+    """<div class="title">Welcome to the जनसहायक!</div>""",
     unsafe_allow_html=True
 )
 # st.markdown("This tool allows you to interact with our citizen services through a conversational AI. You can either speak or type your query.")
@@ -252,7 +252,7 @@ audio_bytes = audio_recorder("Speak now")
 if not audio_bytes:
     st.warning("Please record some audio to proceed.")
 else:
-    st.write("Audio recorded. Processing...")
+    # st.write("Audio recorded. Processing...")
     st.session_state.recorded_audio = audio_bytes
     file_path = bhashini_master.save_audio_as_wav(audio_bytes, directory="output", file_name="last_recording.wav")
     detected_audio_language = fallback_language_code
@@ -266,7 +266,7 @@ else:
         st.markdown(f"**You:** {transcribed_text}")
         st.markdown(f"🤖 **Mitra:** {response}")
         bhashini_master.speak(response, source_language=detected_audio_language)
-        st.warning("Please record some audio to proceed.")
+        # st.warning("Please record some audio to proceed.")
     else:
         st.write("Error: Audio transcription failed.")
 
