@@ -16,7 +16,7 @@ from rapidfuzz import process, fuzz
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
 common_variants = {
     "seekho": "sikho",
-    # "सरकार्": "सरकार",
+    "Kamao": "Kamau",
 }
 
 def normalize_text(text):
