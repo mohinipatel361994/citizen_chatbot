@@ -286,7 +286,8 @@ def get_response(user_input):
     except Exception as e:
         st.error(f"Error occurred: {e}")
         return "Sorry, something went wrong. Please try again later."
-
+if "audio_processed" not in st.session_state:
+    st.session_state.audio_processed = False
 # Chat input
 user_query = st.chat_input("Type your message here...")
 
@@ -310,11 +311,12 @@ else:
         st.markdown(f"🤖 **Mitra:** {response}")
         bhashini_master.speak(response, source_language=detected_audio_language)
         # st.warning("Please record some audio to proceed.")
+        st.session_state.audio_processed = True
     else:
         st.write("Error: Audio transcription failed.")
 
 # Process manual text input if available
-if user_query:
+if user_query and not st.session_state.audio_processed:
     # If your Bhashini master has a detect_text_language method, use it; otherwise, use the fallback.
     try:
         detected_text_language = bhashini_master.detect_text_language(user_query)
