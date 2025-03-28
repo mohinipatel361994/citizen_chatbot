@@ -208,7 +208,7 @@ def load_faiss_vectorstore():
         st.error(f"Failed to load FAISS index: {e}")
         return None
 
-def get_context_retriever_chain(vector_store):
+def get_context_retriever_chain(vector_store, language_code):
     llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
     # Use similarity search instead of mmr
     retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
@@ -218,17 +218,32 @@ def get_context_retriever_chain(vector_store):
     retrieved_docs = retriever.get_relevant_documents(test_query)
     # st.write(f"Retrieved {len(retrieved_docs)} documents for test query.")
     
-    prompt_template = """You are a knowledgeable and helpful assistant with expertise in the subject matter.
-
-Context:
-{context}
-
-User’s Question:
-"{question}"
-
-Instructions:
-Please provide a detailed and well-organized answer that directly addresses the question. Use the context above to support your answer, and if you encounter any gaps in your knowledge, suggest reliable sources or ask for further clarification. Include examples or references where appropriate, and clearly explain your reasoning.
-"""
+    if language_code == "hi":
+        prompt_template = """
+    आप एक जानकार और सहायक सहायक हैं जो विषय में विशेषज्ञता रखते हैं।
+    
+    ### संदर्भ ###
+    {context}
+    
+    ### प्रश्न ###
+    "{question}"
+    
+    ### निर्देश ###
+    कृपया ऊपर दिए गए संदर्भ का उपयोग करते हुए प्रश्न का सुव्यवस्थित, संक्षिप्त और हिंदी में उत्तर दें। यदि आपको उत्तर नहीं पता है, तो बस कहें "मुझे जानकारी नहीं है।" अंत में "धन्यवाद!" भी जोड़ें।
+    """
+    else:
+        prompt_template = """
+    You are a knowledgeable and helpful assistant with expertise in the subject matter.
+    
+    ### Context ###
+    {context}
+    
+    ### Question ###
+    "{question}"
+    
+    ### Instructions ###
+    Please provide a detailed, well-organized, and concise answer that directly addresses the question using the context above. If you don't know the answer, simply say "I don't know." Please include "Thanks for asking!" at the end.
+    """
     
     # Removed "language" from input_variables since it's not used in the template
     qa_chain = RetrievalQA.from_chain_type(
