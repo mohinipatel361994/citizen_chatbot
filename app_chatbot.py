@@ -319,6 +319,9 @@ else:
             st.session_state.audio_processed = True
         else:
             st.write("Error: Audio transcription failed.")
+    if "recorded_audio" in st.session_state:
+        del st.session_state["recorded_audio"]
+    # Cleanup the saved file
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
