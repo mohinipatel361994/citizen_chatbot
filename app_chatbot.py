@@ -378,10 +378,10 @@ with st.sidebar:
     #     # st.experimental_rerun()
       
       if 'refresh' not in st.session_state:
-      st.session_state.refresh = 0
+          st.session_state.refresh = 0
       
       def refresh_state():
-      st.session_state.refresh += 1
+          st.session_state.refresh += 1
       
       st.button('Refresh Data', on_click=refresh_state)
       
