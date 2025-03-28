@@ -302,18 +302,19 @@ else:
     detected_audio_language = fallback_language_code
     # st.write(f"Detected audio language: {detected_audio_language}")
     transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=detected_audio_language)
-    if transcribed_text:
-        st.write(f"Transcribed Audio: {transcribed_text}")
-        response = get_response(transcribed_text)
-        st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
-        st.session_state.chat_history.append(AIMessage(content=response))
-        st.markdown(f"**You:** {transcribed_text}")
-        st.markdown(f"🤖 **Mitra:** {response}")
-        bhashini_master.speak(response, source_language=detected_audio_language)
-        # st.warning("Please record some audio to proceed.")
-        st.session_state.audio_processed = True
-    else:
-        st.write("Error: Audio transcription failed.")
+    with st.spinner("Generating response..."):
+        if transcribed_text:
+            # st.write(f"Transcribed Audio: {transcribed_text}")
+            response = get_response(transcribed_text)
+            st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
+            st.session_state.chat_history.append(AIMessage(content=response))
+            st.markdown(f"**You:** {transcribed_text}")
+            st.markdown(f"🤖 **Mitra:** {response}")
+            bhashini_master.speak(response, source_language=detected_audio_language)
+            # st.warning("Please record some audio to proceed.")
+            st.session_state.audio_processed = True
+        else:
+            st.write("Error: Audio transcription failed.")
 
 # Process manual text input if available
 if user_query and not st.session_state.audio_processed:
