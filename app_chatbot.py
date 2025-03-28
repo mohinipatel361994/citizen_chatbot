@@ -271,7 +271,7 @@ def get_response(user_input):
         st.error("Vector store not found. Please rebuild the FAISS index.")
         return "Sorry, I couldn't retrieve the information."
     
-    retriever_chain = get_context_retriever_chain(vector_store)
+    retriever_chain = get_context_retriever_chain(vector_store, language_code)
     try:
         # Use the corrected query for retrieval
         response = retriever_chain.invoke({"query": corrected_query})
