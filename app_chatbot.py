@@ -316,6 +316,11 @@ else:
             st.session_state.audio_processed = True
         else:
             st.write("Error: Audio transcription failed.")
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            st.error(f"Failed to delete audio file: {e}")
 
 # Process manual text input if available
 if user_query and not st.session_state.audio_processed:
