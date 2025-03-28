@@ -358,6 +358,15 @@ with st.sidebar:
                 st.markdown(f"**You:** {message.content}")
             elif isinstance(message, AIMessage):
                 st.markdown(f"🤖 **Mitra:** {message.content}")
+    if 'refresh' not in st.session_state:
+          st.session_state.refresh = 0
+      
+    def refresh_state():
+          st.session_state.refresh += 1
+      
+    st.button('Refresh Data', on_click=refresh_state)
+      
+    st.write(f'Page refreshed {st.session_state.refresh} times')
     # if st.button("Clear Chat History"):
     #     on_click=refresh_state
     #     st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
@@ -377,14 +386,6 @@ with st.sidebar:
     #         st.error(f"Failed to delete audio file: {e}")
     #     # st.experimental_rerun()
       
-  if 'refresh' not in st.session_state:
-      st.session_state.refresh = 0
-  
-  def refresh_state():
-      st.session_state.refresh += 1
-  
-  st.button('Refresh Data', on_click=refresh_state)
-  
-  st.write(f'Page refreshed {st.session_state.refresh} times')
+
 
 st.markdown(footer, unsafe_allow_html=True)
