@@ -13,7 +13,6 @@ import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
-from streamlit_js_eval import streamlit_js_eval
 
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
 common_variants = {
