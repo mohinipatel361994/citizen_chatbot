@@ -13,6 +13,7 @@ import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
+from streamlit.server.server import Server
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
 common_variants = {
     "seekho": "sikho",
@@ -367,7 +368,7 @@ with st.sidebar:
           st.session_state.refresh = 0
       
     def refresh_state():
-          st.session_state.refresh += 1
+          Server.get_current()._reloader.reload()
       
     st.button('Refresh Data', on_click=refresh_state)
       
