@@ -377,14 +377,14 @@ with st.sidebar:
     #         st.error(f"Failed to delete audio file: {e}")
     #     # st.experimental_rerun()
       
-      if 'refresh' not in st.session_state:
-          st.session_state.refresh = 0
-      
-      def refresh_state():
-          st.session_state.refresh += 1
-      
-      st.button('Refresh Data', on_click=refresh_state)
-      
-      st.write(f'Page refreshed {st.session_state.refresh} times')
+  if 'refresh' not in st.session_state:
+      st.session_state.refresh = 0
+  
+  def refresh_state():
+      st.session_state.refresh += 1
+  
+  st.button('Refresh Data', on_click=refresh_state)
+  
+  st.write(f'Page refreshed {st.session_state.refresh} times')
 
 st.markdown(footer, unsafe_allow_html=True)
