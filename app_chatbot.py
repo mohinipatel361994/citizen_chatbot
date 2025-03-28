@@ -1,5 +1,7 @@
 import os
 import re
+import logging
+import uuid
 import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage, HumanMessage
@@ -14,6 +16,17 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
 
+# Configure logging to file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
+logging.info("Application started.")
+
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
 common_variants = {
     "seekho": "sikho",
@@ -22,9 +35,9 @@ common_variants = {
 
 def normalize_text(text):
     """Lowercase and remove extra spaces."""
-    text = text.lower().strip()
-    text = re.sub(r'\s+', ' ', text)
-    return text
+    normalized = re.sub(r'\s+', ' ', text.lower().strip())
+    logging.debug(f"Normalized text: {normalized}")
+    return normalized
 
 def correct_spelling(text, variant_dict, threshold=80):
     """
@@ -37,29 +50,34 @@ def correct_spelling(text, variant_dict, threshold=80):
         match, score, _ = process.extractOne(word, variant_dict.keys(), scorer=fuzz.ratio)
         if score >= threshold:
             corrected_words.append(variant_dict[match])
+            logging.debug(f"Corrected '{word}' to '{variant_dict[match]}' (score: {score}).")
         else:
             corrected_words.append(word)
     return " ".join(corrected_words)
     
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
-    with open(image_file, "rb") as image:
-        encoded_image = base64.b64encode(image.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: linear-gradient(rgba(255, 255, 255, {opacity}), rgba(255, 255, 255, {opacity})),
-                              url(data:image/jpg;base64,{encoded_image});
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            height: 100vh;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    try:
+        with open(image_file, "rb") as image:
+            encoded_image = base64.b64encode(image.read()).decode()
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: linear-gradient(rgba(255, 255, 255, {opacity}), rgba(255, 255, 255, {opacity})),
+                                  url(data:image/jpg;base64,{encoded_image});
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                height: 100vh;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        logging.info("Background image added successfully.")
+    except Exception as e:
+        logging.error(f"Failed to add background image: {e}")
 
 # Call the background function (update the image path as needed)
 add_bg_from_local('image/grey_bg.jfif')
@@ -147,28 +165,29 @@ st.markdown(
     """<div class="title">Welcome to the सेवा सहायक!</div>""",
     unsafe_allow_html=True
 )
-# st.markdown("This tool allows you to interact with our citizen services through a conversational AI. You can either speak or type your query.")
 
+# Initialize session state for chat history and session ID
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
+    logging.info("Initialized chat history.")
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+    logging.info(f"New session started with session ID: {st.session_state.session_id}")
 
 # Load environment variables
 load_dotenv()
-
-# st.title("Citizen Service Chatbot")
+logging.info("Environment variables loaded.")
 
 # Available languages for selection
 languages = {
     "English": "en",
     "Hindi": "hi",
-    # "Bengali": "bn",
-    # "Punjabi": "pa",
-    # "Telugu": "te",
 }
 selected_language = st.selectbox("Query language:", options=list(languages.keys()))
 language_code = languages[selected_language]
-# st.write(f"Selected language: {selected_language}")
 fallback_language_code = languages[selected_language]
+logging.info(f"Selected language: {selected_language}")
 
 api_key = st.secrets["secret_section"]["openai_api_key"]
 bhashini_url = st.secrets["secret_section"]["bhashini_url"]
@@ -183,42 +202,64 @@ bhashini_master = Bhashini_master(
     ulca_api_key=bhashini_ulca_api_key,
     ulca_userid=bhashini_ulca_userid
 )
+logging.info("Bhashini master initialized.")
 
 # Directory for FAISS index
 PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_eoffice")
 if not os.path.exists(PERSIST_DIR):
+    logging.error("❌ FAISS index not found! Rebuild it first.")
     print("❌ FAISS index not found! Rebuild it first.")
+
 def load_faiss_vectorstore():
     """Load FAISS vector store from disk and verify dimensions."""
     if not os.path.exists(PERSIST_DIR):
         st.error("FAISS index not found. Please rebuild the FAISS index using the correct embedding model.")
+        logging.error("FAISS index not found in expected directory.")
         return None
     model_name = "sentence-transformers/paraphrase-xlm-r-multilingual-v1"
     embeddings = HuggingFaceEmbeddings(model_name=model_name)
-    # embeddings = OpenAIEmbeddings(api_key=api_key)
     expected_dim = len(embeddings.embed_query("test query"))
     
     try:
         vector_store = FAISS.load_local(PERSIST_DIR, embeddings, allow_dangerous_deserialization=True)
         if vector_store.index.d != expected_dim:
             st.error(f"Dimension mismatch: expected {expected_dim}, but index has {vector_store.index.d}. Please rebuild the FAISS index.")
+            logging.error(f"Dimension mismatch: expected {expected_dim}, but got {vector_store.index.d}.")
             return None
-        # st.success("FAISS index loaded successfully!")
+        logging.info("FAISS vector store loaded successfully.")
         return vector_store
     except Exception as e:
         st.error(f"Failed to load FAISS index: {e}")
+        logging.error(f"Failed to load FAISS index: {e}")
         return None
 
+def log_chat_history():
+    # Log the session ID and a simplified version of the chat history.
+    chat_log = [
+        {"role": msg.__class__.__name__, "content": msg.content}
+        for msg in st.session_state.chat_history
+    ]
+    logging.info(f"Session {st.session_state.session_id} chat history: {chat_log}")
+def get_chat_history_string(max_turns=5):
+    """
+    Returns the last max_turns of chat history as a single string.
+    This helps the model recall previous interactions.
+    """
+    history_lines = []
+    # Only take the last `max_turns` pairs (or messages) for brevity.
+    # Adjust slicing as necessary.
+    for msg in st.session_state.chat_history[-max_turns:]:
+        role = "User" if isinstance(msg, HumanMessage) else "Bot"
+        history_lines.append(f"{role}: {msg.content}")
+    return "\n".join(history_lines)
+    
 def get_context_retriever_chain(vector_store, language_code):
     llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
-    # Use similarity search instead of mmr
     retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
     
-    # st.write("Testing Retriever: Fetching Context...")
     test_query = "What services are available for citizens?"
     retrieved_docs = retriever.get_relevant_documents(test_query)
-    # st.write(f"Retrieved {len(retrieved_docs)} documents for test query.")
-    
+    logging.info(f"Retrieved {len(retrieved_docs)} documents for test query.")
     if language_code == "hi":
         prompt_template = """
             You are a knowledgeable and helpful assistant with deep expertise in your field.
@@ -247,7 +288,6 @@ def get_context_retriever_chain(vector_store, language_code):
     Please provide a detailed, well-organized, and concise answer that directly addresses the question using the context above. If you don't know the answer, simply say "I don't know." Please include "Thanks for asking!" at the end.
     """
     
-    # Removed "language" from input_variables since it's not used in the template
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
@@ -260,36 +300,39 @@ def get_context_retriever_chain(vector_store, language_code):
             ),
         }
     )
-    
+    logging.info("Context retriever chain created.")
     return qa_chain
 
 def get_response(user_input):
-    # Normalize and correct the input query
     norm_query = normalize_text(user_input)
     corrected_query = correct_spelling(norm_query, common_variants)
     
     vector_store = load_faiss_vectorstore()
     if not vector_store:
         st.error("Vector store not found. Please rebuild the FAISS index.")
+        logging.error("Vector store not found.")
         return "Sorry, I couldn't retrieve the information."
-    
+    chat_history_str = get_chat_history_string(max_turns=5)
     retriever_chain = get_context_retriever_chain(vector_store, language_code)
     try:
-        # Use the corrected query for retrieval
-        response = retriever_chain.invoke({"query": corrected_query})
-        
+        response = retriever_chain.invoke({ "chat_history": chat_history_str,"question": corrected_query,})
         result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
         source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
-        
         final_response = f"{result}"
         if source_urls:
             final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
-        return final_response   
+        logging.info("Response generated successfully.")
+        # Log the updated chat history after response generation.
+        log_chat_history()
+        return final_response
     except Exception as e:
         st.error(f"Error occurred: {e}")
+        logging.error(f"Error in get_response: {e}")
         return "Sorry, something went wrong. Please try again later."
+
 if "audio_processed" not in st.session_state:
     st.session_state.audio_processed = False
+
 # Chat input
 user_query = st.chat_input("Type your message here...")
 
@@ -297,44 +340,44 @@ user_query = st.chat_input("Type your message here...")
 audio_bytes = audio_recorder("Speak now")
 if not audio_bytes:
     st.warning("Please record some audio to proceed.")
+    logging.info("No audio recorded.")
 else:
-    # st.write("Audio recorded. Processing...")
     st.session_state.recorded_audio = audio_bytes
     file_path = bhashini_master.save_audio_as_wav(audio_bytes, directory="output", file_name="last_recording.wav")
+    logging.info(f"Audio saved at {file_path}")
     detected_audio_language = fallback_language_code
-    # st.write(f"Detected audio language: {detected_audio_language}")
     transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=detected_audio_language)
     with st.spinner("Generating response..."):
         if transcribed_text:
-            # st.write(f"Transcribed Audio: {transcribed_text}")
             response = get_response(transcribed_text)
             st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
             st.session_state.chat_history.append(AIMessage(content=response))
             st.markdown(f"**You:** {transcribed_text}")
             st.markdown(f"🤖 **Mitra:** {response}")
             bhashini_master.speak(response, source_language=detected_audio_language)
-            # st.warning("Please record some audio to proceed.")
             st.session_state.audio_processed = True
+            logging.info("Audio processed and response generated.")
         else:
             st.write("Error: Audio transcription failed.")
+            logging.error("Audio transcription failed.")
     if "recorded_audio" in st.session_state:
         del st.session_state["recorded_audio"]
-    # Cleanup the saved file
+        logging.info("Cleared recorded audio from session state.")
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
+            logging.info("Temporary audio file deleted.")
         except Exception as e:
             st.error(f"Failed to delete audio file: {e}")
+            logging.error(f"Failed to delete audio file: {e}")
 
 # Process manual text input if available
 if user_query and not st.session_state.audio_processed:
-    # If your Bhashini master has a detect_text_language method, use it; otherwise, use the fallback.
     try:
         detected_text_language = bhashini_master.detect_text_language(user_query)
     except Exception:
         detected_text_language = fallback_language_code
     detected_text_language = fallback_language_code  # Using fallback for consistency
-    # st.write(f"Detected text language: {detected_text_language}")   
     with st.spinner("Generating response..."):
         response = get_response(user_query)
         st.session_state.chat_history.append(HumanMessage(content=user_query))
@@ -342,9 +385,9 @@ if user_query and not st.session_state.audio_processed:
         st.markdown(f"**You:** {user_query}")
         st.markdown(f"🤖 **Mitra:** {response}")
         bhashini_master.speak(response, source_language=language_code)
+        logging.info("Processed manual text input.")
 
 # Sidebar for Chat History
-# st.sidebar.title("Chat History")
 footer = """
     <div class="footer">
         <p style="text-align: left;">Copyright © 2024 Citizen Services. All rights reserved.</p>
@@ -352,11 +395,12 @@ footer = """
     </div>
 """
 if 'refresh' not in st.session_state:
-  st.session_state.refresh = 0
+    st.session_state.refresh = 0
 
 def refresh_state():
-  st.session_state.refresh += 1
-  
+    st.session_state.refresh += 1
+    logging.info(f"Refresh state updated: {st.session_state.refresh}")
+
 with st.sidebar:
     st.sidebar.markdown(footer, unsafe_allow_html=True)
     st.title("Chat History")
@@ -369,24 +413,22 @@ with st.sidebar:
                 st.markdown(f"🤖 **Mitra:** {message.content}")
     
     if st.button("Clear Chat History"):
-        on_click=refresh_state
         st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
-        
-        # Reset audio-related session state
+        logging.info(f"Session {st.session_state.session_id}: Chat history cleared.")
         if "recorded_audio" in st.session_state:
             del st.session_state["recorded_audio"]
         if "transcribed_text" in st.session_state:
             del st.session_state["transcribed_text"]
-        
-        # Delete the saved WAV file if it exists
         audio_file_path = os.path.join(os.getcwd(), "output", "last_recording.wav")
         try:
             if os.path.exists(audio_file_path):
                 os.remove(audio_file_path)
+                logging.info("Cleared temporary audio file on chat history clear.")
         except Exception as e:
             st.error(f"Failed to delete audio file: {e}")
-        # st.rerun()
-      
-
+            logging.error(f"Failed to delete audio file on chat history clear: {e}")
+        # Log the cleared chat history
+        log_chat_history()
 
 st.markdown(footer, unsafe_allow_html=True)
+logging.info("Application finished rendering.")
