@@ -386,7 +386,7 @@ with st.sidebar:
                 os.remove(audio_file_path)
         except Exception as e:
             st.error(f"Failed to delete audio file: {e}")
-        # st.experimental_rerun()
+        st.rerun()
       
 
 
