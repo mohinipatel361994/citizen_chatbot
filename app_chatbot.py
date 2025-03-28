@@ -13,8 +13,6 @@ import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
-# from streamlit.server.server import Server
-from streamlit.runtime.server import Server
 from streamlit_js_eval import streamlit_js_eval
 
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
@@ -370,34 +368,25 @@ with st.sidebar:
                 st.markdown(f"**You:** {message.content}")
             elif isinstance(message, AIMessage):
                 st.markdown(f"🤖 **Mitra:** {message.content}")
-    if 'refresh' not in st.session_state:
-          st.session_state.refresh = 0
-      
-    def refresh_state():
-          Server.get_current()._reloader.reload()
-      
-    st.button('Refresh Data', on_click=refresh_state)
-    if st.button("Reload page"):
-        streamlit_js_eval(js_expressions="parent.window.location.reload()")  
-    st.write(f'Page refreshed {st.session_state.refresh} times')
-    # if st.button("Clear Chat History"):
-    #     on_click=refresh_state
-    #     st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
+    
+    if st.button("Clear Chat History"):
+        on_click=refresh_state
+        st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
         
-    #     # Reset audio-related session state
-    #     if "recorded_audio" in st.session_state:
-    #         del st.session_state["recorded_audio"]
-    #     if "transcribed_text" in st.session_state:
-    #         del st.session_state["transcribed_text"]
+        # Reset audio-related session state
+        if "recorded_audio" in st.session_state:
+            del st.session_state["recorded_audio"]
+        if "transcribed_text" in st.session_state:
+            del st.session_state["transcribed_text"]
         
-    #     # Delete the saved WAV file if it exists
-    #     audio_file_path = os.path.join(os.getcwd(), "output", "last_recording.wav")
-    #     try:
-    #         if os.path.exists(audio_file_path):
-    #             os.remove(audio_file_path)
-    #     except Exception as e:
-    #         st.error(f"Failed to delete audio file: {e}")
-    #     # st.experimental_rerun()
+        # Delete the saved WAV file if it exists
+        audio_file_path = os.path.join(os.getcwd(), "output", "last_recording.wav")
+        try:
+            if os.path.exists(audio_file_path):
+                os.remove(audio_file_path)
+        except Exception as e:
+            st.error(f"Failed to delete audio file: {e}")
+        # st.experimental_rerun()
       
 
 
