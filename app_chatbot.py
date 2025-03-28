@@ -352,7 +352,6 @@ with st.sidebar:
             elif isinstance(message, AIMessage):
                 st.markdown(f"🤖 **Mitra:** {message.content}")
     if st.button("Clear Chat History"):
-        # Reset chat history
         st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
         
         # Reset audio-related session state
@@ -360,9 +359,6 @@ with st.sidebar:
             del st.session_state["recorded_audio"]
         if "transcribed_text" in st.session_state:
             del st.session_state["transcribed_text"]
-        
-        # Ensure other relevant session state variables are reset
-        # Add any other session state variables that need to be reset
         
         # Delete the saved WAV file if it exists
         audio_file_path = os.path.join(os.getcwd(), "output", "last_recording.wav")
@@ -372,7 +368,8 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Failed to delete audio file: {e}")
         
-        # Rerun the Streamlit app to ensure complete reset
-        st.rerun()
+        # Reload the page to ensure a complete reset
+        st.experimental_rerun()
+
 
 st.markdown(footer, unsafe_allow_html=True)
