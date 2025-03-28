@@ -14,6 +14,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
 from streamlit.server.server import Server
+from streamlit_js_eval import streamlit_js_eval
+
 st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
 common_variants = {
     "seekho": "sikho",
@@ -371,7 +373,8 @@ with st.sidebar:
           Server.get_current()._reloader.reload()
       
     st.button('Refresh Data', on_click=refresh_state)
-      
+    if st.button("Reload page"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")  
     st.write(f'Page refreshed {st.session_state.refresh} times')
     # if st.button("Clear Chat History"):
     #     on_click=refresh_state
