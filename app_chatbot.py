@@ -220,17 +220,18 @@ def get_context_retriever_chain(vector_store, language_code):
     
     if language_code == "hi":
         prompt_template = """
-    आप एक जानकार और सहायक सहायक हैं जो विषय में विशेषज्ञता रखते हैं।
-    
-    ### संदर्भ ###
-    {context}
-    
-    ### प्रश्न ###
-    "{question}"
-    
-    ### निर्देश ###
-    कृपया ऊपर दिए गए संदर्भ का उपयोग करते हुए प्रश्न का सुव्यवस्थित, संक्षिप्त और हिंदी में उत्तर दें। यदि आपको उत्तर नहीं पता है, तो बस कहें "मुझे जानकारी नहीं है।" अंत में "धन्यवाद!" भी जोड़ें।
-    """
+            You are a knowledgeable and helpful assistant with deep expertise in your field.
+            Using the context provided below, please answer the question entirely in Hindi.
+            Ensure your answer is clear, concise, and well-organized.
+            If you are unsure of the answer, simply respond with "मुझे जानकारी नहीं है।"
+            End your response with "धन्यवाद!".
+                
+            ### Context:
+            {context}
+            
+            ### Question:
+            "{question}"
+            """
     else:
         prompt_template = """
     You are a knowledgeable and helpful assistant with expertise in the subject matter.
