@@ -182,7 +182,7 @@ logging.info("Environment variables loaded.")
 # Available languages for selection
 languages = {
     "English": "en",
-    "Hindi": "hi",
+    "हिन्दी": "hi",
 }
 selected_language = st.selectbox("Query language:", options=list(languages.keys()))
 language_code = languages[selected_language]
