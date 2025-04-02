@@ -148,7 +148,7 @@ with st.container():
          st.markdown(
             """
             <div style="text-align: center; margin-left: 30px;">
-                <h1 style="color:#000080; margin-bottom: 0;">सेवा सहायक 🤖</h1>
+                <h1 style="color:#000080; margin-bottom: 0;">🤖 सेवा सहायक</h1>
                 <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">AI-based chatbot for citizen services</p>
             </div>
             """,
