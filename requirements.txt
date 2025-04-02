@@ -2,8 +2,8 @@ streamlit
 langchain
 langchain-openai
 langchain-community
-faiss-cpu
 openai
+faiss-cpu
 sentence-transformers
 numpy
 pandas
@@ -14,3 +14,11 @@ audio-recorder-streamlit
 uuid
 rapidfuzz
 base64
+re
+logging
+os
+PyYAML
+PyMuPDF
+tiktoken
+protobuf==3.20.3
+watchdog
