@@ -315,7 +315,7 @@ def get_response(user_input):
     chat_history_str = get_chat_history_string(max_turns=5)
     retriever_chain = get_context_retriever_chain(vector_store, language_code)
     try:
-        response = retriever_chain.invoke({ "chat_history": chat_history_str,"question": corrected_query,})
+        response = retriever_chain.invoke({"query": corrected_query, "chat_history": chat_history_str,})
         result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
         source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
         final_response = f"{result}"
