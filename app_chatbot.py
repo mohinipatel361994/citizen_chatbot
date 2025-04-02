@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 logging.info("Application started.")
 
-st.set_page_config(page_title="सेवा सहायक", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
 common_variants = {
     "seekho": "sikho",
     "Kamao": "Kamau",
@@ -148,8 +148,8 @@ with st.container():
          st.markdown(
             """
             <div style="text-align: center; margin-left: 30px;">
-                <h1 style="color:#000080; margin-bottom: 0;">🤖 सेवा सहायक</h1>
-                <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">AI-based chatbot for citizen services</p>
+                <h1 style="color:#000080; margin-bottom: 0;">🤖 जन सेवा सहायक</h1>
+                <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">सेवा सहायक: मध्य प्रदेश सरकार की योजनाओं और सेवाओं के लिए आपका डिजिटल सहायक</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -162,13 +162,23 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Introductory text
 st.markdown(
-    """<div class="title">Welcome to the सेवा सहायक!</div>""",
+    """<div class="title" style="font-size: 18px; font-weight: 500; line-height: 1.6;">
+    सेवा सहायक एक AI-आधारित चैटबॉट है जो नागरिकों को मध्य प्रदेश सरकार की योजनाओं और सेवाओं के बारे में जानकारी देने के लिए बनाया गया है। 
+    यह आपको विभिन्न सरकारी योजनाओं, लाभ, प्रक्रियाओं और सेवाओं की विस्तृत जानकारी प्रदान करता है।  
+    यदि आपको किसी योजना के लिए पात्रता, आवेदन प्रक्रिया, दस्तावेज़ों की आवश्यकताएँ या अन्य कोई सहायता चाहिए, तो यह चैटबॉट आपकी सहायता के लिए तैयार है।  
+    <br>
+    <b>आप कैसे मदद ले सकते हैं?</b>  
+    <br>1. किसी भी सरकारी योजना की जानकारी प्राप्त करें  
+    <br>2. आवेदन प्रक्रिया और पात्रता शर्तें जानें  
+    <br>3. दस्तावेज़ और आवश्यक कागजात की जानकारी लें  
+    <br>4. हेल्पलाइन नंबर और संपर्क जानकारी प्राप्त करें  
+    </div>""",
     unsafe_allow_html=True
 )
 
 # Initialize session state for chat history and session ID
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
+    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
     logging.info("Initialized chat history.")
 
 if "session_id" not in st.session_state:
@@ -181,10 +191,10 @@ logging.info("Environment variables loaded.")
 
 # Available languages for selection
 languages = {
-    "English": "en",
     "हिन्दी": "hi",
+    "English": "en",
 }
-selected_language = st.selectbox("Query language:", options=list(languages.keys()))
+selected_language = st.selectbox("प्रश्न की भाषा:", options=list(languages.keys()))
 language_code = languages[selected_language]
 fallback_language_code = languages[selected_language]
 logging.info(f"Selected language: {selected_language}")
@@ -194,7 +204,11 @@ bhashini_url = st.secrets["secret_section"]["bhashini_url"]
 bhashini_authorization_key = st.secrets["secret_section"]["bhashini_authorization_key"]
 bhashini_ulca_api_key = st.secrets["secret_section"]["bhashini_ulca_api_key"]
 bhashini_ulca_userid = st.secrets["secret_section"]["bhashini_ulca_userid"]
-
+# api_key = os.getenv("openai_api_key")
+# bhashini_url = os.getenv("bhashini_url")
+# bhashini_authorization_key = os.getenv("bhashini_authorization_key")
+# bhashini_ulca_api_key = os.getenv("bhashini_ulca_api_key")
+# bhashini_ulca_userid = os.getenv("bhashini_ulca_userid")
 # Initialize Bhashini master for transcription
 bhashini_master = Bhashini_master(
     url=bhashini_url,
@@ -334,12 +348,19 @@ if "audio_processed" not in st.session_state:
     st.session_state.audio_processed = False
 
 # Chat input
-user_query = st.chat_input("Type your message here...")
+# user_query = st.chat_input("Type your message here...")
 
 # Audio processing
-audio_bytes = audio_recorder("Speak now")
+col1, col2 = st.columns([0.8, 0.2])
+
+with col1:
+    user_query = st.chat_input("अपने संदेश टाइप करें...")  # Text input
+
+with col2:
+        audio_bytes = audio_recorder("रिकॉर्ड करें")  # Microphone button
+    
 if not audio_bytes:
-    st.warning("Please record some audio to proceed.")
+    st.warning("कृपया आगे बढ़ने के लिए ऑडियो रिकॉर्ड करें।")
     logging.info("No audio recorded.")
 else:
     st.session_state.recorded_audio = audio_bytes
@@ -353,7 +374,7 @@ else:
             st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
             st.session_state.chat_history.append(AIMessage(content=response))
             st.markdown(f"**You:** {transcribed_text}")
-            st.markdown(f"🤖 **Mitra:** {response}")
+            st.markdown(f"🤖 **सेवा सहायक:** {response}")
             bhashini_master.speak(response, source_language=detected_audio_language)
             st.session_state.audio_processed = True
             logging.info("Audio processed and response generated.")
@@ -383,15 +404,14 @@ if user_query and not st.session_state.audio_processed:
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**You:** {user_query}")
-        st.markdown(f"🤖 **Mitra:** {response}")
+        st.markdown(f"🤖 **सेवा सहायक:** {response}")
         bhashini_master.speak(response, source_language=language_code)
         logging.info("Processed manual text input.")
 
 # Sidebar for Chat History
 footer = """
     <div class="footer">
-        <p style="text-align: left;">Copyright © 2024 Citizen Services. All rights reserved.</p>
-        <p style="text-align: right;">The responses provided by this chatbot are AI-generated. Please verify with official sources.</p>
+        <p style="text-align: left;">Copyright © 2024 Citizen Services. All rights reserved.</br>The responses provided by this chatbot are AI-generated. Please verify with official sources.</p>
     </div>
 """
 if 'refresh' not in st.session_state:
@@ -410,10 +430,10 @@ with st.sidebar:
             if isinstance(message, HumanMessage):
                 st.markdown(f"**You:** {message.content}")
             elif isinstance(message, AIMessage):
-                st.markdown(f"🤖 **Mitra:** {message.content}")
+                st.markdown(f"🤖 **सेवा सहायक:** {message.content}")
     
     if st.button("Clear Chat History"):
-        st.session_state.chat_history = [AIMessage(content="Hello, I am a bot. How can I help you?")]
+        st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
         logging.info(f"Session {st.session_state.session_id}: Chat history cleared.")
         if "recorded_audio" in st.session_state:
             del st.session_state["recorded_audio"]
