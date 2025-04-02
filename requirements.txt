@@ -9,14 +9,8 @@ numpy
 pandas
 python-dotenv
 Pillow
-bhashini-services1
 audio-recorder-streamlit
-uuid
 rapidfuzz
-base64
-re
-logging
-os
 PyYAML
 PyMuPDF
 tiktoken
