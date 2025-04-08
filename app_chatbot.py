@@ -218,7 +218,7 @@ bhashini_master = Bhashini_master(
 logging.info("Bhashini master initialized.")
 
 # Directory for FAISS index
-PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_eoffice")
+PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_eoffice/faiss_index_eoffice")
 if not os.path.exists(PERSIST_DIR):
     logging.error("❌ FAISS index not found! Rebuild it first.")
     print("❌ FAISS index not found! Rebuild it first.")
