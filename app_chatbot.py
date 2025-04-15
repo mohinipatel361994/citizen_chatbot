@@ -15,6 +15,8 @@ import base64
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings    
 from rapidfuzz import process, fuzz
+import os
+os.environ["STREAMLIT_WATCHER_TYPE"] = "none"
 
 # Configure logging to file and console
 logging.basicConfig(
