@@ -411,7 +411,7 @@ if user_query and not st.session_state.audio_processed:
 # Sidebar for Chat History
 footer = """
     <div class="footer">
-        <p style="text-align: left;">Copyright © 2024 Citizen Services. All rights reserved.</br>The responses provided by this chatbot are AI-generated. Please verify with official sources.</p>
+        <p style="text-align: left;">Copyright © 2025 Citizen Services. All rights reserved.</br>The responses provided by this chatbot are AI-generated. Please verify with official sources.</p>
     </div>
 """
 if 'refresh' not in st.session_state:
