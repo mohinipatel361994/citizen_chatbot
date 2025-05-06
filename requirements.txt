@@ -1,11 +1,6 @@
 streamlit
-langchain
 langchain-openai
-langchain-community
 openai
-faiss-cpu
-sentence-transformers
-transformers
 numpy
 pandas
 python-dotenv
@@ -18,4 +13,9 @@ tiktoken
 protobuf==3.20.3
 watchdog
 google-generativeai
-torch
+torch==2.1.2
+sentence-transformers==2.2.2
+langchain==0.1.16
+langchain-community==0.0.33
+faiss-cpu==1.7.4
+transformers==4.38.2
