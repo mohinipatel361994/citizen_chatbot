@@ -238,7 +238,7 @@ def load_faiss_vectorstore():
         logging.error("FAISS index not found in expected directory.")
         return None
     model_name = "sentence-transformers/paraphrase-xlm-r-multilingual-v1"
-    embeddings = HuggingFaceEmbeddings(model_name=model_name)
+    embeddings = HuggingFaceEmbeddings(model_name=model_name,model_kwargs={"device": "cpu"})
     expected_dim = len(embeddings.embed_query("test query"))
     
     try:
