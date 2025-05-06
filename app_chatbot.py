@@ -230,15 +230,17 @@ PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_eoffice")
 if not os.path.exists(PERSIST_DIR):
     logging.error("❌ FAISS index not found! Rebuild it first.")
     print("❌ FAISS index not found! Rebuild it first.")
-
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
+)
 def load_faiss_vectorstore():
     """Load FAISS vector store from disk and verify dimensions."""
     if not os.path.exists(PERSIST_DIR):
         st.error("FAISS index not found. Please rebuild the FAISS index using the correct embedding model.")
         logging.error("FAISS index not found in expected directory.")
         return None
-    model_name = "sentence-transformers/paraphrase-xlm-r-multilingual-v1"
-    embeddings = HuggingFaceEmbeddings(model_name=model_name,model_kwargs={"device": "cpu"})
+    # model_name = "sentence-transformers/paraphrase-xlm-r-multilingual-v1"
+    embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
     expected_dim = len(embeddings.embed_query("test query"))
     
     try:
