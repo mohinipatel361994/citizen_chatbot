@@ -19,7 +19,7 @@ tiktoken
 faiss-cpu==1.7.4
 sentence-transformers==2.2.2
 transformers==4.38.2
-torch==2.1.2
+
 
 # LangChain ecosystem
 langchain==0.1.16
