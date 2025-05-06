@@ -332,7 +332,7 @@ def get_response(user_input):
     regex_result = regex_search_schemes(corrected_query, schemes)
     regex_result=json.dumps(regex_result, indent=2, ensure_ascii=False)
     if regex_result:
-        scheme_name = regex_result.get("Scheme Name", "Unnamed Scheme")
+        # scheme_name = regex_result.get("Scheme Name", "Unnamed Scheme")
         try:
             llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
             result = llm.invoke({"input": scheme_prompt})
