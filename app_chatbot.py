@@ -294,7 +294,7 @@ def get_context_retriever_chain(vector_store, language_code):
     logging.info("Context retriever chain created.")
     return qa_chain
 vector_store = load_faiss_vectorstore()
-genai.configure(google_api_key)
+genai.configure(api_key=google_api_key)
 def regex_search_schemes(query, schemes):
     """
     Uses Gemini to find the best matching scheme name from a list of schemes.
