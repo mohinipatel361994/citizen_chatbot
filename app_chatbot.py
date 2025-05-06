@@ -205,6 +205,7 @@ language_code = languages[selected_language]
 fallback_language_code = languages[selected_language]
 logging.info(f"Selected language: {selected_language}")
 
+google_api_key = st.secrets["secret_section"]["google_api_key"]
 api_key = st.secrets["secret_section"]["openai_api_key"]
 bhashini_url = st.secrets["secret_section"]["bhashini_url"]
 bhashini_authorization_key = st.secrets["secret_section"]["bhashini_authorization_key"]
@@ -293,6 +294,7 @@ def get_context_retriever_chain(vector_store, language_code):
     logging.info("Context retriever chain created.")
     return qa_chain
 vector_store = load_faiss_vectorstore()
+genai.configure(api_key=os.getenv("google_api_key"))
 def regex_search_schemes(query, schemes):
     """
     Uses Gemini to find the best matching scheme name from a list of schemes.
