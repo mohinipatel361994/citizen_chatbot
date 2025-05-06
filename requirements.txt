@@ -16,7 +16,7 @@ rapidfuzz
 
 # Tokenization & embeddings
 tiktoken
-faiss-cpu==1.7.4
+faiss-cpu
 sentence-transformers==2.2.2
 transformers==4.38.2
 
