@@ -335,7 +335,7 @@ def get_response(user_input):
         # scheme_name = regex_result.get("Scheme Name", "Unnamed Scheme")
         try:
             llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
-            result = llm.invoke({"input": scheme_prompt})
+            result = llm.invoke(scheme_prompt)
             final_response = result.content
         except Exception as e:
             logging.error(f"LLM invocation failed: {e}")
