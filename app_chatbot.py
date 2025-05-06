@@ -33,12 +33,6 @@ logging.basicConfig(
 logging.info("Application started.")
 
 st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
-common_variants = {
-    "seekho": "sikho",
-    "Kamao": "Kamau",    
-    "Yojana": "yojna",
-    "yojna": "scheme",
-}
 
 def normalize_text(text):
     """Lowercase and remove extra spaces."""
@@ -46,21 +40,15 @@ def normalize_text(text):
     logging.debug(f"Normalized text: {normalized}")
     return normalized
 
-def correct_spelling(text, variant_dict, threshold=80):
-    """
-    For each word in text, check for close matches in variant_dict.
-    If the fuzzy match score exceeds the threshold, replace the word.
-    """
-    words = text.split()
-    corrected_words = []
-    for word in words:
-        match, score, _ = process.extractOne(word, variant_dict.keys(), scorer=fuzz.ratio)
-        if score >= threshold:
-            corrected_words.append(variant_dict[match])
-            logging.debug(f"Corrected '{word}' to '{variant_dict[match]}' (score: {score}).")
-        else:
-            corrected_words.append(word)
-    return " ".join(corrected_words)
+def correct_spelling(text):
+    text = text.lower()
+    text = re.sub(r'\s+', ' ', text)  # remove extra whitespace
+    text = text.strip()
+    text = text.replace("sikho", "seekho")  # simple manual correction
+    text = text.replace("Kamau", "Kamao")  # correct spelling
+    text = text.replace("yojna", "yojana")  # correct spelling
+    text = text.replace("Yojana", "scheme")  # correct spelling
+    return text
     
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
@@ -328,7 +316,7 @@ def regex_search_schemes(query, schemes):
         return None
 def get_response(user_input):
     norm_query = normalize_text(user_input)
-    corrected_query = correct_spelling(norm_query, common_variants)
+    corrected_query = correct_spelling(norm_query)
     regex_result = regex_search_schemes(corrected_query, schemes)
     regex_result=json.dumps(regex_result, indent=2, ensure_ascii=False)
     if regex_result:
