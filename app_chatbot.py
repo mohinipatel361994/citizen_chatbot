@@ -161,7 +161,7 @@ with st.container():
             unsafe_allow_html=True
         )
         logo_image = Image.open('image/public-icon.jpg')
-        st.image(logo_image, use_container_width=True)
+        st.image(logo_image)
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
          st.markdown(
