@@ -42,16 +42,6 @@ class UTF8TextLoader(TextLoader):
     def __init__(self, file_path):
         super().__init__(file_path, encoding="utf-8")
 
-text_data_path = os.path.join(os.getcwd(), "myscheme_text")
-text_loader = DirectoryLoader(
-    text_data_path,
-    glob="*.txt",
-    loader_cls=UTF8TextLoader
-)
-documents = text_loader.load()
-
-logging.info(f"Loaded {len(documents)} text documents from {text_data_path}")
-
 st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
 common_variants = {
     "seekho": "sikho",
@@ -297,12 +287,6 @@ def get_chat_history_string(max_turns=5):
         role = "User" if isinstance(msg, HumanMessage) else "Bot"
         history_lines.append(f"{role}: {msg.content}")
     return "\n".join(history_lines)
-
-def load_bm25_retriever(documents):
-    retriever = BM25Retriever.from_documents(documents)
-    retriever.k = 5  # Number of documents to retrieve
-    return retriever
-
 def get_hybrid_retriever(vector_store, bm25_retriever):
     vector_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
     
