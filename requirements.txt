@@ -8,5 +8,4 @@ Pillow==9.2.0
 rapidfuzz==2.11.1
 google-generativeai==0.1.0
 dotenv==0.19.0
-bhashini_services1==0.1.0
 audio_recorder_streamlit==0.1.0
