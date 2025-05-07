@@ -1,32 +1,12 @@
-# Core packages
-streamlit
-numpy
-pandas
-python-dotenv
-Pillow
-PyYAML
-PyMuPDF
-watchdog
-
-# Audio
-audio-recorder-streamlit
-
-# Fuzzy matching
-rapidfuzz
-
-# Tokenization & embeddings
-tiktoken
-faiss-cpu
-sentence-transformers==2.2.2
-transformers==4.38.2
-
-
-# LangChain ecosystem
-langchain==0.1.16
-langchain-community==0.0.33
-langchain-openai
-openai
-google-generativeai
-
-# Compatibility fix: protobuf pinned to avoid conflict with older packages
-protobuf==3.20.3
+streamlit==1.38.0
+langchain==0.1.14
+langchain-openai==0.1.1
+langchain-community==0.0.21
+google-generativeai==0.4.1
+huggingface-hub==0.23.1
+sentence-transformers==2.6.1
+pillow==10.3.0
+python-dotenv==1.0.1
+rapidfuzz==3.6.1
+faiss-cpu==1.8.0
+audio-recorder-streamlit==0.0.7
