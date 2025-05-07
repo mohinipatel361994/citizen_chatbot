@@ -1,54 +1,88 @@
-import os,json
-import re
-import logging
-import uuid
+import os, re, logging, uuid, base64, json, textwrap
 import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage, HumanMessage
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 from bhashini_services1 import Bhashini_master
 from audio_recorder_streamlit import audio_recorder
 from PIL import Image
-import base64
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings    
+from langchain_huggingface import HuggingFaceEmbeddings
 from rapidfuzz import process, fuzz
-import google.generativeai as genai
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from prompts import scheme_prompt, prompt_template
+import google.generativeai as genai
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
+)
+# Load schemes data from a JSON file
 with open("myscheme_json/all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 schemes = data.get("Schemes", [])
+
 # Configure logging to file and console
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("app.log"),
+        logging.FileHandler("app.log", encoding="utf-8"),
         logging.StreamHandler()
-    ]
+    ],
+    force=True
 )
+
 logging.info("Application started.")
+# Helper class to force UTF-8 encoding
+class UTF8TextLoader(TextLoader):
+    def __init__(self, file_path):
+        super().__init__(file_path, encoding="utf-8")
+
+text_data_path = os.path.join(os.getcwd(), "myscheme_text")
+text_loader = DirectoryLoader(
+    text_data_path,
+    glob="*.txt",
+    loader_cls=UTF8TextLoader
+)
+documents = text_loader.load()
+
+logging.info(f"Loaded {len(documents)} text documents from {text_data_path}")
 
 st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
+common_variants = {
+    "seekho": "sikho",
+    "Kamao": "Kamau",
+    "Yojana": "yojna",
+    "yojna": "scheme",
+    # "": "",
+}
 
 def normalize_text(text):
-    """Lowercase and remove extra spaces."""
+    """Lowercase and remove extra spaces. Handles None input safely."""
+    if not text:
+        logging.warning("normalize_text received None or empty input.")
+        return ""
     normalized = re.sub(r'\s+', ' ', text.lower().strip())
     logging.debug(f"Normalized text: {normalized}")
     return normalized
 
-def correct_spelling(text):
+def correct_spelling(text, variant_dict, threshold=80):
     text = text.lower()
     text = re.sub(r'\s+', ' ', text)  # remove extra whitespace
     text = text.strip()
     text = text.replace("sikho", "seekho")  # simple manual correction
     text = text.replace("Kamau", "Kamao")  # correct spelling
     text = text.replace("yojna", "yojana")  # correct spelling
-    text = text.replace("Yojana", "scheme")  # correct spelling
+    text = text.replace("Yojana", "s")  # correct spelling
     return text
+# Initialize session state for chat history and session ID
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
+    logging.info("Initialized chat history.")
     
 # Add background image from a local file
 def add_bg_from_local(image_file, opacity=0):
@@ -60,7 +94,7 @@ def add_bg_from_local(image_file, opacity=0):
             <style>
             .stApp {{
                 background-image: linear-gradient(rgba(255, 255, 255, {opacity}), rgba(255, 255, 255, {opacity})),
-                                  url(data:image/jpg;base64,{encoded_image});
+                url(data:image/jpg;base64,{encoded_image});
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -200,11 +234,13 @@ bhashini_authorization_key = st.secrets["secret_section"]["bhashini_authorizatio
 bhashini_ulca_api_key = st.secrets["secret_section"]["bhashini_ulca_api_key"]
 bhashini_ulca_userid = st.secrets["secret_section"]["bhashini_ulca_userid"]
 
+# google_api_key = os.getenv("google_api_key")
 # api_key = os.getenv("openai_api_key")
 # bhashini_url = os.getenv("bhashini_url")
 # bhashini_authorization_key = os.getenv("bhashini_authorization_key")
 # bhashini_ulca_api_key = os.getenv("bhashini_ulca_api_key")
 # bhashini_ulca_userid = os.getenv("bhashini_ulca_userid")
+
 # Initialize Bhashini master for transcription
 bhashini_master = Bhashini_master(
     url=bhashini_url,
@@ -215,20 +251,31 @@ bhashini_master = Bhashini_master(
 logging.info("Bhashini master initialized.")
 
 # Directory for FAISS index
-PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_eoffice")
+PERSIST_DIR = os.path.join(os.getcwd(), "faiss_index_pagging")
 if not os.path.exists(PERSIST_DIR):
     logging.error("❌ FAISS index not found! Rebuild it first.")
     print("❌ FAISS index not found! Rebuild it first.")
 
 def load_faiss_vectorstore():
-    if os.path.exists(PERSIST_DIR):
-        embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1")
-        vector_store = FAISS.load_local(PERSIST_DIR, embeddings=embedding)
+    """Load FAISS vector store from disk and verify dimensions."""
+    if not os.path.exists(PERSIST_DIR):
+        st.error("FAISS index not found. Please rebuild the FAISS index using the correct embedding model.")
+        logging.error("FAISS index not found in expected directory.")
+        return None
+
+    expected_dim = len(embedding_model.embed_query("test query"))
+    
+    try:
+        vector_store = FAISS.load_local(PERSIST_DIR, embedding_model, allow_dangerous_deserialization=True)
+        if vector_store.index.d != expected_dim:
+            st.error(f"Dimension mismatch: expected {expected_dim}, but index has {vector_store.index.d}. Please rebuild the FAISS index.")
+            logging.error(f"Dimension mismatch: expected {expected_dim}, but got {vector_store.index.d}.")
+            return None
         logging.info("FAISS vector store loaded successfully.")
         return vector_store
-    else:
-        st.error("FAISS index not found. Please rebuild.")
-        logging.error("FAISS index not found in the expected directory.")
+    except Exception as e:
+        st.error(f"Failed to load FAISS index: {e}")
+        logging.error(f"Failed to load FAISS index: {e}")
         return None
 
 def log_chat_history():
@@ -250,33 +297,47 @@ def get_chat_history_string(max_turns=5):
         role = "User" if isinstance(msg, HumanMessage) else "Bot"
         history_lines.append(f"{role}: {msg.content}")
     return "\n".join(history_lines)
+
+def load_bm25_retriever(documents):
+    retriever = BM25Retriever.from_documents(documents)
+    retriever.k = 5  # Number of documents to retrieve
+    return retriever
+
+def get_hybrid_retriever(vector_store, bm25_retriever):
+    vector_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
     
-def get_context_retriever_chain(vector_store, language_code):
+    hybrid = EnsembleRetriever(
+        retrievers=[vector_retriever, bm25_retriever],
+        weights=[0.5, 0.5]  # Adjust weights to balance keyword vs semantic
+    )
+    return hybrid
+        
+def get_context_retriever_chain(vector_store):
     llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
     retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
-    
-    test_query = "What services are available for citizens?"
-    retrieved_docs = retriever.get_relevant_documents(test_query)
-    logging.info(f"Retrieved {len(retrieved_docs)} documents for test query.")    
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
         retriever=retriever,
         return_source_documents=True,
         chain_type_kwargs={
-            "prompt": prompt_template,
+            "prompt": PromptTemplate(
+                template=prompt_template,
+                input_variables=["context", "question"]
+                ),
         }
     )
     logging.info("Context retriever chain created.")
     return qa_chain
-vector_store = load_faiss_vectorstore()
-#genai.configure(api_key=google_api_key)
+
+genai.configure(api_key=google_api_key)
+
 def regex_search_schemes(query, schemes):
     """
     Uses Gemini to find the best matching scheme name from a list of schemes.
     """
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash",api_key=google_api_key)  # Or the version you verified
+        model = genai.GenerativeModel("gemini-1.5-flash")  # Or the version you verified
 
         scheme_names = [scheme.get("Scheme Name", "") for scheme in schemes if isinstance(scheme, dict)]
 
@@ -287,12 +348,15 @@ def regex_search_schemes(query, schemes):
             f"Respond with only the matching scheme name exactly as listed above."
         )
 
-        logging.info(f"Sending prompt to Gemini: {prompt}")
+        # logging.info(f"Sending prompt to Gemini: {prompt}")
         response = model.generate_content(prompt)
         matched_name = response.text.strip() if hasattr(response, 'text') else None
 
         # Find the corresponding full scheme dict
         for scheme in schemes:
+            if not isinstance(scheme, dict):
+                print(f"Skipping non-dict scheme: {scheme}")
+                continue
             if scheme.get("Scheme Name", "").strip().lower() == matched_name.lower():
                 return scheme
 
@@ -302,17 +366,41 @@ def regex_search_schemes(query, schemes):
     except Exception as e:
         logging.exception("Gemini scheme matching failed:")
         return None
+        
+def load_scheme_vectorstore(scheme_name):
+    try:
+        # Assume the FAISS indexes are saved under faiss_index_paging/{scheme_name}/
+        scheme_folder = f"faiss_index_paging/{scheme_name.lower().replace(' ', '_')}"
+        
+        if not os.path.exists(scheme_folder):
+            logging.error(f"Vector store folder does not exist for scheme: {scheme_folder}")
+            return None
+
+        # Load FAISS vectorstore using HuggingFace embeddings
+        vector_store = FAISS.load_local(folder_path=scheme_folder, embeddings=embedding_model)
+        
+        logging.info(f"Successfully loaded vector store for scheme: {scheme_name}")
+        return vector_store
+
+    except Exception as e:
+        logging.error(f"Error loading vector store for scheme {scheme_name}: {e}")
+        return None
+vector_store = load_faiss_vectorstore()       
 def get_response(user_input):
     norm_query = normalize_text(user_input)
-    corrected_query = correct_spelling(norm_query)
+    corrected_query = correct_spelling(norm_query, common_variants)
+    # print("schemes data in the respose",corrected_query)
     regex_result = regex_search_schemes(corrected_query, schemes)
+    # print("regex_result",regex_result)
     regex_result=json.dumps(regex_result, indent=2, ensure_ascii=False)
     if regex_result:
         # scheme_name = regex_result.get("Scheme Name", "Unnamed Scheme")
         try:
             llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
-            result = llm.invoke(scheme_prompt)
+            filled_prompt = scheme_prompt.format(regex_result=regex_result,corrected_query=corrected_query)
+            result = llm.invoke(filled_prompt)
             final_response = result.content
+            print("final_response",final_response)
         except Exception as e:
             logging.error(f"LLM invocation failed: {e}")
             final_response = "योजना विवरण निकालने में त्रुटि हुई। कृपया बाद में प्रयास करें।"
@@ -326,7 +414,7 @@ def get_response(user_input):
             logging.error("Vector store not found.")
             return "Sorry, I couldn't retrieve the information."
         chat_history_str = get_chat_history_string(max_turns=5)
-        retriever_chain = get_context_retriever_chain(vector_store, language_code)
+        retriever_chain = get_context_retriever_chain(vector_store)
         try:
             response = retriever_chain.invoke({"query": corrected_query, "chat_history": chat_history_str,})
             result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
@@ -345,9 +433,6 @@ def get_response(user_input):
 
 if "audio_processed" not in st.session_state:
     st.session_state.audio_processed = False
-
-# Chat input
-# user_query = st.chat_input("Type your message here...")
 
 # Audio processing
 col1, col2 = st.columns([0.8, 0.2])
