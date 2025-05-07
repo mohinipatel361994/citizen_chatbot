@@ -10,3 +10,4 @@ python-dotenv==1.0.1
 rapidfuzz==3.6.1
 faiss-cpu==1.8.0
 audio-recorder-streamlit==0.0.7
+langchain-huggingface==0.0.1  # or latest
