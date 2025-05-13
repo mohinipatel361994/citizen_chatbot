@@ -2,7 +2,6 @@ langchain
 streamlit==1.15.0
 langchain_openai
 langchain_huggingface
-langchain_community
 openai
 dotenv
 requests
