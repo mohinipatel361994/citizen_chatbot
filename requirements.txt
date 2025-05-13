@@ -10,3 +10,4 @@ rapidfuzz
 google-generativeai
 langchain_community
 faiss-cpu
+torch
