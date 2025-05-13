@@ -17,7 +17,7 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from prompts import scheme_prompt, prompt_template
 import google.generativeai as genai
 embedding_model = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1", device="cpu"
+    model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
 )
 # Load schemes data from a JSON file
 with open("myscheme_json/all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
