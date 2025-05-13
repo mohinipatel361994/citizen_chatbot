@@ -43,13 +43,6 @@ class UTF8TextLoader(TextLoader):
         super().__init__(file_path, encoding="utf-8")
 
 st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
-common_variants = {
-    "seekho": "sikho",
-    "Kamao": "Kamau",
-    "Yojana": "yojna",
-    "yojna": "scheme",
-    # "": "",
-}
 
 def normalize_text(text):
     """Lowercase and remove extra spaces. Handles None input safely."""
@@ -372,7 +365,7 @@ def load_scheme_vectorstore(scheme_name):
 vector_store = load_faiss_vectorstore()       
 def get_response(user_input):
     norm_query = normalize_text(user_input)
-    corrected_query = correct_spelling(norm_query, common_variants)
+    corrected_query = correct_spelling(norm_query)
     # print("schemes data in the respose",corrected_query)
     regex_result = regex_search_schemes(corrected_query, schemes)
     # print("regex_result",regex_result)
