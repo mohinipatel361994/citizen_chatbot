@@ -336,7 +336,8 @@ def regex_search_schemes(query, schemes):
                 continue
             if scheme.get("Scheme Name", "").strip().lower() == matched_name.lower():
                 return scheme
-
+            else:
+                return matched_name
         logging.warning(f"Gemini matched scheme name not found in original list: {matched_name}")
         return None
 
