@@ -9,5 +9,4 @@ audio_recorder_streamlit
 rapidfuzz
 google-generativeai
 langchain_community
-numpy
-faiss-gpu == 24.1
+faiss-cpu
