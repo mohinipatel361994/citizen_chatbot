@@ -9,3 +9,4 @@ audio_recorder_streamlit
 rapidfuzz
 google-generativeai
 langchain_community
+faiss-gpu
