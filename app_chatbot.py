@@ -53,7 +53,7 @@ def normalize_text(text):
     logging.debug(f"Normalized text: {normalized}")
     return normalized
 
-def correct_spelling(text, variant_dict, threshold=80):
+def correct_spelling(text):
     text = text.lower()
     text = re.sub(r'\s+', ' ', text)  # remove extra whitespace
     text = text.strip()
