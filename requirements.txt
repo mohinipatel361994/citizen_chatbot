@@ -1,13 +1,34 @@
-langchain
-langchain_openai
-langchain_huggingface
-openai
-dotenv
-requests
-Pillow
-audio_recorder_streamlit
-rapidfuzz
-google-generativeai
-langchain_community
-faiss-cpu
-torch
+# Core packages
+streamlit==1.35.0
+openai==1.23.2
+tiktoken==0.6.0
+google-generativeai==0.4.1
+python-dotenv==1.0.1
+requests>=2.31.0
+pillow>=10.3.0
+faiss-cpu==1.7.4
+numpy>=1.26.4
+sentence-transformers==2.6.1
+scikit-learn>=1.4.2
+
+# LangChain & integrations
+langchain==0.1.17
+langchain-openai==0.1.6
+langchain-community==0.0.34
+langchain-huggingface==0.0.6
+
+# BM25 & Document loaders
+rank-bm25==0.2.2
+
+# Audio recording
+audio-recorder-streamlit==0.0.2
+
+# Optional: used by langchain + FAISS (for certain vectorstore loaders)
+pydantic==1.10.13
+
+# Utility
+uuid
+ast
+re
+logging
+base64
