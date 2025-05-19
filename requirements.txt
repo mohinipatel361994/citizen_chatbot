@@ -1,44 +1,41 @@
-# Streamlit web app framework
+# Streamlit app framework
 streamlit
 
-# Google Gemini integration
+# Google Gemini API
 google-generativeai
 
-# LangChain ecosystem
+# LangChain and compatible extensions
 langchain
 langchain-openai
 langchain-community
 langchain-huggingface
 
-# Vector search
-faiss-cpu  # Use faiss-cpu for compatibility (avoid GPU unless needed)
-
-# Embeddings model
+# Embedding model
 sentence-transformers
+
+# Vector search (CPU-compatible)
+faiss-cpu
 
 # Token counting
 tiktoken
 
-# Dotenv for managing environment variables
+# Environment variable loader
 python-dotenv
 
-# Image and audio handling
+# Audio & image handling
 Pillow
 soundfile
 numpy
-pydub  # useful for audio conversion if needed
+pydub
 
-# Audio recording in Streamlit
+# Audio recorder component for Streamlit
 audio-recorder-streamlit
 
-# BM25 keyword retriever
+# BM25 text retriever
 rank_bm25
 
 # HTTP requests
 requests
 
-# Required for parsing (used in your code)
-astunparse  # safer alternative to plain ast.literal_eval (optional)
-
-# Optional text-to-speech (if used in bhashini)
+# Text-to-speech (optional)
 gTTS
