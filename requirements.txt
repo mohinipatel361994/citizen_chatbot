@@ -1,34 +1,33 @@
-# Core packages
-streamlit==1.35.0
-openai==1.23.2
-tiktoken==0.6.0
-google-generativeai==0.4.1
-python-dotenv==1.0.1
-requests>=2.31.0
-pillow>=10.3.0
-faiss-cpu==1.7.4
-numpy>=1.26.4
-sentence-transformers==2.6.1
-scikit-learn>=1.4.2
+# Core Python dependencies
+requests
+tiktoken
+python-dotenv
+base64io  # used for encoding/decoding base64, often covered by stdlib
+Pillow
+streamlit
+langchain
+langchain-openai
+langchain-community
+langchain-huggingface
+google-generativeai
+sentence-transformers
+faiss-cpu
+bhashini-services1  # Assuming this is a local or custom package; install manually or from a private repo
 
-# LangChain & integrations
-langchain==0.1.17
-langchain-openai==0.1.6
-langchain-community==0.0.34
-langchain-huggingface==0.0.6
+# Optional: If you use gTTS or other TTS for Bhashini
+gTTS
 
-# BM25 & Document loaders
-rank-bm25==0.2.2
+# Audio handling
+wave  # from Python standard library (included by default)
+pyaudio  # needed if you record or play audio in local environments
+soundfile
+numpy
 
-# Audio recording
-audio-recorder-streamlit==0.0.2
+# If using BM25 from langchain_community.retrievers
+rank_bm25
 
-# Optional: used by langchain + FAISS (for certain vectorstore loaders)
-pydantic==1.10.13
+# Date/time and filesystem utilities (standard library)
+# datetime, os, shutil, time are part of standard Python
 
-# Utility
-uuid
-ast
-re
-logging
-base64
+# Ensure compatibility
+openai >= 1.2.0
