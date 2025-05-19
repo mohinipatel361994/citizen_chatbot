@@ -1,33 +1,44 @@
-# Core Python dependencies
-requests
-tiktoken
-python-dotenv
-base64io  # used for encoding/decoding base64, often covered by stdlib
-Pillow
+# Streamlit web app framework
 streamlit
+
+# Google Gemini integration
+google-generativeai
+
+# LangChain ecosystem
 langchain
 langchain-openai
 langchain-community
 langchain-huggingface
-google-generativeai
+
+# Vector search
+faiss-cpu  # Use faiss-cpu for compatibility (avoid GPU unless needed)
+
+# Embeddings model
 sentence-transformers
-faiss-cpu
-bhashini-services1  # Assuming this is a local or custom package; install manually or from a private repo
 
-# Optional: If you use gTTS or other TTS for Bhashini
-gTTS
+# Token counting
+tiktoken
 
-# Audio handling
-wave  # from Python standard library (included by default)
-pyaudio  # needed if you record or play audio in local environments
+# Dotenv for managing environment variables
+python-dotenv
+
+# Image and audio handling
+Pillow
 soundfile
 numpy
+pydub  # useful for audio conversion if needed
 
-# If using BM25 from langchain_community.retrievers
+# Audio recording in Streamlit
+audio-recorder-streamlit
+
+# BM25 keyword retriever
 rank_bm25
 
-# Date/time and filesystem utilities (standard library)
-# datetime, os, shutil, time are part of standard Python
+# HTTP requests
+requests
 
-# Ensure compatibility
-openai >= 1.2.0
+# Required for parsing (used in your code)
+astunparse  # safer alternative to plain ast.literal_eval (optional)
+
+# Optional text-to-speech (if used in bhashini)
+gTTS
