@@ -20,7 +20,7 @@ embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
 )
 # Load schemes data from a JSON file
-with open("myscheme_json/all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
+with open("all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 schemes = data.get("Schemes", [])
