@@ -34,6 +34,9 @@ audio-recorder-streamlit
 # BM25 text retriever
 rank_bm25
 
+# Fuzzy matching (was missing!)
+rapidfuzz
+
 # HTTP requests
 requests
 
