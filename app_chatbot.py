@@ -1,29 +1,28 @@
-import os, re, logging, uuid, base64, json, textwrap
+import os, re, logging, uuid, base64, json,ast,tiktoken
 import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
+from rapidfuzz import process, fuzz
 from bhashini_services1 import Bhashini_master
 from audio_recorder_streamlit import audio_recorder
 from PIL import Image
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from rapidfuzz import process, fuzz
-from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from prompts import scheme_prompt, prompt_template
+from prompts import scheme_prompt, prompt_template, refine_gemini
 import google.generativeai as genai
+from vertexai.language_models import TextGenerationModel
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
 )
 # Load schemes data from a JSON file
-with open("all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
+with open("myscheme_json/all_schemes_madhya_pradesh.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 schemes = data.get("Schemes", [])
+model = genai.GenerativeModel("models/gemini-2.0-flash-lite")
 
 # Configure logging to file and console
 logging.basicConfig(
@@ -38,11 +37,6 @@ logging.basicConfig(
 
 logging.info("Application started.")
 # Helper class to force UTF-8 encoding
-class UTF8TextLoader(TextLoader):
-    def __init__(self, file_path):
-        super().__init__(file_path, encoding="utf-8")
-
-st.set_page_config(page_title="जन सेवा सहायक", page_icon="image/Emblem_of_Madhya_Pradesh.svg", layout="wide")
 
 def normalize_text(text):
     """Lowercase and remove extra spaces. Handles None input safely."""
@@ -52,6 +46,15 @@ def normalize_text(text):
     normalized = re.sub(r'\s+', ' ', text.lower().strip())
     logging.debug(f"Normalized text: {normalized}")
     return normalized
+
+def gemini_translate_one_word(text, source_language, target_language):
+    prompt = (
+        f"Translate the following {source_language} word to {target_language}. "
+        f"Return only the translated sentenc, nothing else:\n\n{text}"
+    )
+
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
 def correct_spelling(text):
     text = text.lower()
@@ -154,7 +157,7 @@ with st.container():
             unsafe_allow_html=True
         )
         logo_image = Image.open('image/public-icon.jpg')
-        st.image(logo_image)
+        st.image(logo_image, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
          st.markdown(
@@ -174,16 +177,28 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Introductory text
 st.markdown(
-    """<div class="title" style="font-size: 18px; font-weight: 500; line-height: 1.6;">
-    <b>जन सेवा सहायक</b> एक AI-आधारित चैटबॉट है जो नागरिकों को <b>मध्य प्रदेश सरकार की योजनाओं और सेवाओं</b> के बारे में जानकारी देने के लिए बनाया गया है। 
-    यह आपको विभिन्न सरकारी योजनाओं, लाभ, प्रक्रियाओं और सेवाओं की विस्तृत जानकारी प्रदान करता है।  
-    यदि आपको किसी योजना के लिए पात्रता, आवेदन प्रक्रिया, दस्तावेज़ों की आवश्यकताएँ या अन्य कोई सहायता चाहिए, तो यह चैटबॉट आपकी सहायता के लिए तैयार है।  
-    <br>
-    <b>आप कैसे मदद ले सकते हैं?</b>  
-    <br>1. किसी भी सरकारी योजना की जानकारी प्राप्त करें  
-    <br>2. आवेदन प्रक्रिया और पात्रता शर्तें जानें  
-    <br>3. दस्तावेज़ और आवश्यक कागजात की जानकारी लें  
-    </div>""",
+    """
+    <div style="
+        background: linear-gradient(90deg, #ffecd2 0%, #fcb69f 100%);
+        border: 2px solid #f79489;
+        border-radius: 10px;
+        padding: 20px;
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.6;
+        color: #4a2c2a;
+        box-shadow: 2px 2px 10px rgba(252, 182, 159, 0.5);
+        ">
+        <b>जन सेवा सहायक</b> एक AI-आधारित चैटबॉट है जो नागरिकों को <b>मध्य प्रदेश सरकार की योजनाओं और सेवाओं</b> के बारे में जानकारी देने के लिए बनाया गया है। 
+        यह आपको विभिन्न सरकारी योजनाओं, लाभ, प्रक्रियाओं और सेवाओं की विस्तृत जानकारी प्रदान करता है।  
+        यदि आपको किसी योजना के लिए पात्रता, आवेदन प्रक्रिया, दस्तावेज़ों की आवश्यकताएँ या अन्य कोई सहायता चाहिए, तो यह चैटबॉट आपकी सहायता के लिए तैयार है।  
+        <br><br>
+        <b>आप कैसे मदद ले सकते हैं?</b>  
+        <br>1. किसी भी सरकारी योजना की जानकारी प्राप्त करें  
+        <br>2. आवेदन प्रक्रिया और पात्रता शर्तें जानें  
+        <br>3. दस्तावेज़ और आवश्यक कागजात की जानकारी लें  
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
@@ -207,7 +222,6 @@ languages = {
 }
 selected_language = st.selectbox("प्रश्न की भाषा:", options=list(languages.keys()))
 language_code = languages[selected_language]
-fallback_language_code = languages[selected_language]
 logging.info(f"Selected language: {selected_language}")
 
 google_api_key = st.secrets["secret_section"]["google_api_key"]
@@ -223,7 +237,6 @@ bhashini_ulca_userid = st.secrets["secret_section"]["bhashini_ulca_userid"]
 # bhashini_authorization_key = os.getenv("bhashini_authorization_key")
 # bhashini_ulca_api_key = os.getenv("bhashini_ulca_api_key")
 # bhashini_ulca_userid = os.getenv("bhashini_ulca_userid")
-
 # Initialize Bhashini master for transcription
 bhashini_master = Bhashini_master(
     url=bhashini_url,
@@ -268,6 +281,7 @@ def log_chat_history():
         for msg in st.session_state.chat_history
     ]
     logging.info(f"Session {st.session_state.session_id} chat history: {chat_log}")
+    
 def get_chat_history_string(max_turns=5):
     """
     Returns the last max_turns of chat history as a single string.
@@ -280,14 +294,6 @@ def get_chat_history_string(max_turns=5):
         role = "User" if isinstance(msg, HumanMessage) else "Bot"
         history_lines.append(f"{role}: {msg.content}")
     return "\n".join(history_lines)
-def get_hybrid_retriever(vector_store, bm25_retriever):
-    vector_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
-    
-    hybrid = EnsembleRetriever(
-        retrievers=[vector_retriever, bm25_retriever],
-        weights=[0.5, 0.5]  # Adjust weights to balance keyword vs semantic
-    )
-    return hybrid
         
 def get_context_retriever_chain(vector_store):
     llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
@@ -308,43 +314,65 @@ def get_context_retriever_chain(vector_store):
     return qa_chain
 
 genai.configure(api_key=google_api_key)
-
+# def get_fuzzy_matches(query, scheme_names, threshold=85, top_n=3):
+#     matches = process.extract(query, scheme_names, scorer=fuzz.token_sort_ratio, limit=top_n)
+#     return [match[0] for match in matches if match[1] >= threshold]
 def regex_search_schemes(query, schemes):
-    """
-    Uses Gemini to find the best matching scheme name from a list of schemes.
-    """
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")  # Or the version you verified
-
         scheme_names = [scheme.get("Scheme Name", "") for scheme in schemes if isinstance(scheme, dict)]
-
-        # Construct prompt
-        prompt = (
-            f"Given the following list of scheme names:\n{scheme_names}\n\n"
-            f"Which one best matches the user query: '{query}'?\n"
-            f"Respond with only the matching scheme name exactly as listed above."
+        # filtered_scheme_names = get_fuzzy_matches(query, scheme_names)
+        # print("filtered_scheme_names",filtered_scheme_names)
+        # Step 1: Try to match a scheme name directly
+        name_match_prompt = (
+            f"You are given a list of government schemes:\n{scheme_names}\n\n"
+            f"The user asked about this scheme: '{query}'\n\n"
+            f"Your task is to identify the best matching scheme name **only if the name is explicitly mentioned or almost identical (typos allowed)**.\n\n"
+            f"⚠️ STRICT RULES:\n"
+            f"- Do NOT match based on topic, meaning, or context.\n"
+            f"- DO NOT assume the user meant a different scheme with a similar name.\n"
+            f"- For example, treat 'Ladli Behna Yojana' and 'Ladli Laxmi Yojana' as **completely different**.\n"
+            f"- Only return a scheme from the list that is spelled the same (or almost the same with minor typo).\n\n"
+            f"❌ If the user's input does NOT match any scheme name from the list, return: None\n"
+            f"✅ Return only ONE scheme name from the list above, exactly as it appears, or 'None'."
         )
-
-        # logging.info(f"Sending prompt to Gemini: {prompt}")
-        response = model.generate_content(prompt)
+        response = model.generate_content(name_match_prompt)
         matched_name = response.text.strip() if hasattr(response, 'text') else None
 
-        # Find the corresponding full scheme dict
-        for scheme in schemes:
-            if not isinstance(scheme, dict):
-                print(f"Skipping non-dict scheme: {scheme}")
-                continue
-            if scheme.get("Scheme Name", "").strip().lower() == matched_name.lower():
-                return scheme
-            else:
-                return matched_name
-        logging.warning(f"Gemini matched scheme name not found in original list: {matched_name}")
-        return None
+        if matched_name and matched_name.lower() != "none":
+            for scheme in schemes:
+                if not isinstance(scheme, dict):
+                    continue
+                if scheme.get("Scheme Name", "").strip().lower() == matched_name.lower():
+                    print("matched scheme name ",scheme)
+                    return [scheme]  # Return as list
 
+        # Step 2: Match based on eligibility criteria
+        eligibility_data = [
+            {
+                "Scheme Name": scheme.get("Scheme Name", ""),
+                "Eligibility": scheme.get("Eligibility", "")
+            }
+            for scheme in schemes if isinstance(scheme, dict)
+        ]
+
+        eligibility_prompt = (
+            f"You are given a list of government schemes and their eligibility criteria:\n\n"
+            f"{eligibility_data}\n\n"
+            f"User query: '{query}'\n\n"
+            f"Return only a valid Python list of exact scheme names that match the eligibility criteria in the query. "
+            f"Only return a list like ['Scheme A', 'Scheme B',...], nothing else. If nothing matches, return []."
+        )
+
+        eligibility_response = model.generate_content(eligibility_prompt)
+        if hasattr(eligibility_response, "text"):
+            response_text = eligibility_response.text.strip()
+            print("Gemini raw response:\n", response_text) 
+        return response_text
+   
     except Exception as e:
         logging.exception("Gemini scheme matching failed:")
-        return None
-        
+        return []
+
 def load_scheme_vectorstore(scheme_name):
     try:
         # Assume the FAISS indexes are saved under faiss_index_paging/{scheme_name}/
@@ -359,51 +387,139 @@ def load_scheme_vectorstore(scheme_name):
         
         logging.info(f"Successfully loaded vector store for scheme: {scheme_name}")
         return vector_store
-
     except Exception as e:
         logging.error(f"Error loading vector store for scheme {scheme_name}: {e}")
         return None
-vector_store = load_faiss_vectorstore()       
+    
+vector_store = load_faiss_vectorstore()     
+MAX_MODEL_TOKENS = 8192
+BUFFER_FOR_PROMPT_AND_RESPONSE = 1500
+MAX_CONTEXT_TOKENS = MAX_MODEL_TOKENS - BUFFER_FOR_PROMPT_AND_RESPONSE
+
+# Token estimation function
+def num_tokens(text, model="gpt-4"):
+    encoding = tiktoken.encoding_for_model(model)
+    return len(encoding.encode(text))
+
+# Split large JSON string into token-safe chunks
+def split_json_chunks(json_data, max_tokens, model="gpt-4"):
+    encoding = tiktoken.encoding_for_model(model)
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+
+    for scheme in json_data:
+        scheme_text = json.dumps(scheme, indent=2, ensure_ascii=False)
+        token_count = len(encoding.encode(scheme_text))
+        if current_tokens + token_count <= max_tokens:
+            current_chunk.append(scheme)
+            current_tokens += token_count
+        else:
+            chunks.append(current_chunk)
+            current_chunk = [scheme]
+            current_tokens = token_count
+    if current_chunk:
+        chunks.append(current_chunk)
+    return chunks
+def truncate_to_token_limit(text, max_tokens=7500, model="gpt-4"):
+    encoding = tiktoken.encoding_for_model(model)
+    tokens = encoding.encode(text)
+    if len(tokens) <= max_tokens:
+        return text
+    truncated_tokens = tokens[:max_tokens]
+    return encoding.decode(truncated_tokens)  
+def refine_with_gemini(user_query, raw_response):
+    try:
+        prompt=refine_gemini.format(
+                    raw_response=raw_response,
+                    user_query=user_query
+                )
+        result = model.generate_content(prompt)
+        return result.text.strip()
+
+    except Exception as e:
+        logging.error(f"Gemini refinement failed: {e}")
+        return raw_response  # fallback to original
 def get_response(user_input):
     norm_query = normalize_text(user_input)
     corrected_query = correct_spelling(norm_query)
-    # print("schemes data in the respose",corrected_query)
-    regex_result = regex_search_schemes(corrected_query, schemes)
-    # print("regex_result",regex_result)
-    regex_result=json.dumps(regex_result, indent=2, ensure_ascii=False)
-    if regex_result:
-        # scheme_name = regex_result.get("Scheme Name", "Unnamed Scheme")
+
+    matched_schemes = regex_search_schemes(corrected_query, schemes)
+    print("matched_schemes", matched_schemes)
+
+    # Handle fallback: if matched_schemes is a list of strings, convert to dicts
+    if matched_schemes and all(isinstance(s, str) for s in matched_schemes):
+        matched_schemes = [
+            scheme for scheme in schemes
+            if scheme.get("Scheme Name", "").strip() in matched_schemes
+        ]
+
+    if matched_schemes and all(isinstance(s, dict) for s in matched_schemes):
         try:
-            llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
-            filled_prompt = scheme_prompt.format(regex_result=regex_result,corrected_query=corrected_query)
-            result = llm.invoke(filled_prompt)
-            final_response = result.content
-            print("final_response",final_response)
+            json_chunks = split_json_chunks(matched_schemes, max_tokens=MAX_CONTEXT_TOKENS)
+            # llm = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0.3)
+
+            chunk_responses = []
+            for i, chunk in enumerate(json_chunks):
+                chunk_json = json.dumps(chunk, indent=2, ensure_ascii=False)
+                prompt = scheme_prompt.format(
+                    regex_result=chunk_json,
+                    corrected_query=corrected_query
+                )
+
+                if num_tokens(prompt) > MAX_MODEL_TOKENS:
+                    logging.warning(f"Skipping chunk {i+1} due to token limit.")
+                    continue
+
+                response = model.generate_content(prompt)
+                print(f"chunk_responses{i}", response.text)
+                chunk_responses.append(response.text.strip())
+
+            final_response = "\n\n".join(chunk_responses) if chunk_responses else "कोई योजना जानकारी नहीं मिली।"
+
+            try:
+                final_response = refine_with_gemini(corrected_query, final_response)
+            except Exception as e:
+                logging.error(f"Refinement with Gemini failed: {e}")
+
         except Exception as e:
             logging.error(f"LLM invocation failed: {e}")
             final_response = "योजना विवरण निकालने में त्रुटि हुई। कृपया बाद में प्रयास करें।"
-        
+
         log_chat_history()
         return final_response
+
     else:
         logging.warning("No scheme identified via regex.")
         if not vector_store:
             st.error("Vector store not found. Please rebuild the FAISS index.")
             logging.error("Vector store not found.")
             return "Sorry, I couldn't retrieve the information."
+
         chat_history_str = get_chat_history_string(max_turns=5)
         retriever_chain = get_context_retriever_chain(vector_store)
+
         try:
-            response = retriever_chain.invoke({"query": corrected_query, "chat_history": chat_history_str,})
+            response = retriever_chain.invoke({
+                "query": corrected_query,
+                "chat_history": chat_history_str,
+            })
+
             result = response.get('result', "Sorry, I couldn't find specific details on that topic.")
-            source_urls = [doc.metadata.get("source") for doc in response.get("source_documents", []) if doc.metadata.get("source")]
-            final_response = f"{result}"
+            source_urls = [
+                doc.metadata.get("source")
+                for doc in response.get("source_documents", [])
+                if doc.metadata.get("source")
+            ]
+
+            final_response = result
             if source_urls:
                 final_response += "\n\nReferences:\n" + "\n".join(f"- [Source]({url})" for url in source_urls)
+
             logging.info("Response generated successfully.")
-            # Log the updated chat history after response generation.
             log_chat_history()
             return final_response
+
         except Exception as e:
             st.error(f"Error occurred: {e}")
             logging.error(f"Error in get_response: {e}")
@@ -422,21 +538,20 @@ with col2:
     audio_bytes = audio_recorder("रिकॉर्ड करें")  # Microphone button
 
 if not audio_bytes:
-    st.warning("कृपया आगे बढ़ने के लिए ऑडियो रिकॉर्ड करें।")
+    st.warning("अपना प्रश्न टाइप करके या रिकॉर्ड करके पूछें।")
     logging.info("No audio recorded.")
 else:
     st.session_state.recorded_audio = audio_bytes
     file_path = bhashini_master.save_audio_as_wav(audio_bytes, directory="output", file_name="last_recording.wav")
     logging.info(f"Audio saved at {file_path}")
 
-    detected_audio_language = fallback_language_code
-    transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=detected_audio_language)
+    transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=language_code)
 
     if transcribed_text:
         # Translate to English
-        translated_input = bhashini_master.translate_text(
+        translated_input = gemini_translate_one_word(
             transcribed_text,
-            source_language=detected_audio_language,
+            source_language=language_code,
             target_language="en"
         )
         
@@ -444,10 +559,10 @@ else:
             response_in_english = get_response(translated_input)
 
             # Translate back to original language
-            translated_response = bhashini_master.translate_text(
+            translated_response = gemini_translate_one_word(
                 response_in_english,
                 source_language="en",
-                target_language=detected_audio_language
+                target_language=language_code
             )
 
             # Show chat in UI
@@ -461,7 +576,7 @@ else:
             st.markdown(f"**Translated:** {translated_input}")
             st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
 
-            bhashini_master.speak(translated_response, source_language=detected_audio_language)
+            bhashini_master.speak(translated_response, source_language=language_code)
             st.session_state.audio_processed = True
             logging.info("Audio processed and response generated.")
     else:
@@ -482,12 +597,11 @@ else:
 # Manual text input handling
 if user_query and not st.session_state.audio_processed:
 
-    detected_text_language = fallback_language_code
     # Translate to English
-    translated_input = bhashini_master.translate_text(
+    translated_input = gemini_translate_one_word(
         user_query,
-        source_language=detected_text_language,
-        target_language="en"
+        source_language=language_code,
+        target_language="English"
     )
     print("user_query",user_query)
     print("translated_input",translated_input)
@@ -496,10 +610,10 @@ if user_query and not st.session_state.audio_processed:
         response_in_english = get_response(translated_input)
 
         # Translate back to original language
-        translated_response = bhashini_master.translate_text(
+        translated_response = gemini_translate_one_word(
             response_in_english,
-            source_language="en",
-            target_language=detected_text_language
+            source_language="English",
+            target_language=language_code
         )
 
         # Show chat in UI
@@ -513,7 +627,7 @@ if user_query and not st.session_state.audio_processed:
         st.markdown(f"**Translated:** {translated_input}")
         st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
 
-        bhashini_master.speak(translated_response, source_language=detected_text_language)
+        bhashini_master.speak(translated_response, source_language=language_code)
         logging.info("Processed manual text input.")
 
 # Sidebar for Chat History
