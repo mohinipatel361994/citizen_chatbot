@@ -13,7 +13,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from prompts import scheme_prompt, prompt_template, refine_gemini
 import google.generativeai as genai
-from vertexai.language_models import TextGenerationModel
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
 )
