@@ -1,11 +1,10 @@
-import os, re, logging, uuid, base64, json,ast,tiktoken
+import os, re, logging, uuid, base64, json,tiktoken
 import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
-from rapidfuzz import process, fuzz
 from bhashini_services1 import Bhashini_master
 from audio_recorder_streamlit import audio_recorder
 from PIL import Image
@@ -66,7 +65,7 @@ def correct_spelling(text):
     return text
 # Initialize session state for chat history and session ID
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
+    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं आपकी कैसे मदद कर सकता हूँ? ")]
     logging.info("Initialized chat history.")
     
 # Add background image from a local file
@@ -163,7 +162,7 @@ with st.container():
             """
             <div style="text-align: center; margin-left: 30px;">
                 <h1 style="color:#000080; margin-bottom: 0;">🤖 जन सेवा सहायक</h1>
-                <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">सेवा सहायक: मध्य प्रदेश सरकार की योजनाओं और सेवाओं के लिए आपका डिजिटल सहायक</p>
+                <p style="font-size: 18px; font-weight: 600; margin-top: 5px;">मध्य प्रदेश सरकार की योजनाओं के लिए आपका AI सहायक</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -188,14 +187,14 @@ st.markdown(
         color: #4a2c2a;
         box-shadow: 2px 2px 10px rgba(252, 182, 159, 0.5);
         ">
-        <b>जन सेवा सहायक</b> एक AI-आधारित चैटबॉट है जो नागरिकों को <b>मध्य प्रदेश सरकार की योजनाओं और सेवाओं</b> के बारे में जानकारी देने के लिए बनाया गया है। 
-        यह आपको विभिन्न सरकारी योजनाओं, लाभ, प्रक्रियाओं और सेवाओं की विस्तृत जानकारी प्रदान करता है।  
+        <b>जन सेवा सहायक</b> एक AI-आधारित चैटबॉट है जो नागरिकों को <b>भारत सरकार और मध्य प्रदेश सरकार की योजनाओं</b> के बारे में जानकारी देने के लिए बनाया गया है। 
+        यह आपको विभिन्न सरकारी योजनाओं, लाभ, प्रक्रियाओं की विस्तृत जानकारी प्रदान करता है।  
         यदि आपको किसी योजना के लिए पात्रता, आवेदन प्रक्रिया, दस्तावेज़ों की आवश्यकताएँ या अन्य कोई सहायता चाहिए, तो यह चैटबॉट आपकी सहायता के लिए तैयार है।  
         <br><br>
         <b>आप कैसे मदद ले सकते हैं?</b>  
-        <br>1. किसी भी सरकारी योजना की जानकारी प्राप्त करें  
-        <br>2. आवेदन प्रक्रिया और पात्रता शर्तें जानें  
-        <br>3. दस्तावेज़ और आवश्यक कागजात की जानकारी लें  
+        <br>1. किसी भी सरकारी योजना की जानकारी प्राप्त करें।  
+        <br>2. आवेदन प्रक्रिया और पात्रता शर्तें जानें।  
+        <br>3. दस्तावेज़ और आवश्यक कागजात की जानकारी लें।
     </div>
     """,
     unsafe_allow_html=True
@@ -203,7 +202,7 @@ st.markdown(
 
 # Initialize session state for chat history and session ID
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
+    st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं आपकी कैसे मदद कर सकता हूँ? ")]
     logging.info("Initialized chat history.")
 
 if "session_id" not in st.session_state:
@@ -219,7 +218,7 @@ languages = {
     "हिन्दी": "hi",
     "English": "en",
 }
-selected_language = st.selectbox("प्रश्न की भाषा:", options=list(languages.keys()))
+selected_language = st.selectbox("भाषा का चयन करें:", options=list(languages.keys()))
 language_code = languages[selected_language]
 logging.info(f"Selected language: {selected_language}")
 
@@ -313,15 +312,9 @@ def get_context_retriever_chain(vector_store):
     return qa_chain
 
 genai.configure(api_key=google_api_key)
-# def get_fuzzy_matches(query, scheme_names, threshold=85, top_n=3):
-#     matches = process.extract(query, scheme_names, scorer=fuzz.token_sort_ratio, limit=top_n)
-#     return [match[0] for match in matches if match[1] >= threshold]
 def regex_search_schemes(query, schemes):
     try:
         scheme_names = [scheme.get("Scheme Name", "") for scheme in schemes if isinstance(scheme, dict)]
-        # filtered_scheme_names = get_fuzzy_matches(query, scheme_names)
-        # print("filtered_scheme_names",filtered_scheme_names)
-        # Step 1: Try to match a scheme name directly
         name_match_prompt = (
             f"You are given a list of government schemes:\n{scheme_names}\n\n"
             f"The user asked about this scheme: '{query}'\n\n"
@@ -526,6 +519,23 @@ def get_response(user_input):
 
 if "audio_processed" not in st.session_state:
     st.session_state.audio_processed = False
+st.markdown("""
+    <style>
+        .stAudioRecorder {
+            background-color: #4CAF50 !important;  /* Green background */
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        button[data-testid="audio-recorder-button"] {
+            background-color: #ff5722 !important;  /* Orange background */
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Audio processing
 col1, col2 = st.columns([0.8, 0.2])
@@ -537,7 +547,6 @@ with col2:
     audio_bytes = audio_recorder("रिकॉर्ड करें")  # Microphone button
 
 if not audio_bytes:
-    st.warning("अपना प्रश्न टाइप करके या रिकॉर्ड करके पूछें।")
     logging.info("No audio recorded.")
 else:
     st.session_state.recorded_audio = audio_bytes
@@ -654,7 +663,7 @@ with st.sidebar:
                 st.markdown(f"🤖 **सेवा सहायक:** {message.content}")
     
     if st.button("Clear Chat History"):
-        st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं एक बॉट हूँ। मैं आपकी कैसे मदद कर सकता हूँ? ")]
+        st.session_state.chat_history = [AIMessage(content="नमस्ते, मैं आपकी कैसे मदद कर सकता हूँ? ")]
         logging.info(f"Session {st.session_state.session_id}: Chat history cleared.")
         if "recorded_audio" in st.session_state:
             del st.session_state["recorded_audio"]
