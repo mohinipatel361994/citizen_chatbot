@@ -61,7 +61,7 @@ def correct_spelling(text):
     text = text.replace("sikho", "seekho")  # simple manual correction
     text = text.replace("Kamau", "Kamao")  # correct spelling
     text = text.replace("yojna", "yojana")  # correct spelling
-    text = text.replace("Yojana", "s")  # correct spelling
+    text = text.replace("Yojana", "scheme")  # correct spelling
     return text
 # Initialize session state for chat history and session ID
 if "chat_history" not in st.session_state:
