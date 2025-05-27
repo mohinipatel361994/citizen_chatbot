@@ -9,7 +9,7 @@ from bhashini_services1 import Bhashini_master
 from audio_recorder_streamlit import audio_recorder
 from PIL import Image
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from prompts import scheme_prompt, prompt_template, refine_gemini
 import google.generativeai as genai
 embedding_model = HuggingFaceEmbeddings(
