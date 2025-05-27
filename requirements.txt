@@ -1,5 +1,7 @@
 # Streamlit app framework
-streamlit
+streamlit>=1.32.0
+torch>=2.1.0
+
 
 # Google Gemini API
 google-generativeai
