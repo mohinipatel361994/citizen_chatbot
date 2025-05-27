@@ -2,7 +2,6 @@
 streamlit>=1.32.0
 torch>=2.1.0
 
-
 # Google Gemini API
 google-generativeai
 
@@ -13,6 +12,7 @@ langchain-community
 langchain-huggingface
 
 # Embedding model
+transformers
 sentence-transformers
 
 # Vector search (CPU-compatible)
