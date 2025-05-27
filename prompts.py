@@ -136,5 +136,5 @@ Raw Response:
 
 ---
 
-Now rewrite this in a natural and helpful way. List each scheme on a new line with a short and clear explanation anyone can understand.
+Now rewrite this in a natural and helpful way. List best top 5 schemes each scheme on a new line with a short and clear explanation anyone can understand.
 """
