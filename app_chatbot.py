@@ -536,8 +536,13 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+# Initialize session state
+if "input_mode" not in st.session_state:
+    st.session_state.input_mode = "text"
+if "audio_processed" not in st.session_state:
+    st.session_state.audio_processed = False
 
-# Audio processing
+# Layout
 col1, col2 = st.columns([0.8, 0.2])
 
 with col1:
@@ -546,97 +551,68 @@ with col1:
 with col2:
     audio_bytes = audio_recorder("रिकॉर्ड करें")  # Microphone button
 
-if not audio_bytes:
-    logging.info("No audio recorded.")
-else:
+# AUDIO PROCESSING
+if audio_bytes:
+    st.session_state.input_mode = "voice"
     st.session_state.recorded_audio = audio_bytes
+
     file_path = bhashini_master.save_audio_as_wav(audio_bytes, directory="output", file_name="last_recording.wav")
     logging.info(f"Audio saved at {file_path}")
 
     transcribed_text = bhashini_master.transcribe_audio(audio_bytes, source_language=language_code)
 
     if transcribed_text:
-        # Translate to English
-        translated_input = gemini_translate_one_word(
-            transcribed_text,
-            source_language=language_code,
-            target_language="en"
-        )
-        
+        translated_input = gemini_translate_one_word(transcribed_text, source_language=language_code, target_language="en")
+
         with st.spinner("Generating response..."):
             response_in_english = get_response(translated_input)
+            translated_response = gemini_translate_one_word(response_in_english, source_language="en", target_language=language_code)
 
-            # Translate back to original language
-            translated_response = gemini_translate_one_word(
-                response_in_english,
-                source_language="en",
-                target_language=language_code
-            )
+        st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
+        st.session_state.chat_history.append(AIMessage(content=translated_response or "Translation failed."))
 
-            # Show chat in UI
-            st.session_state.chat_history.append(HumanMessage(content=transcribed_text))
-            if translated_response is not None:
-                st.session_state.chat_history.append(AIMessage(content=translated_response))
-            else:
-                st.warning("Translation failed or returned no result.")
+        st.markdown(f"**You:** {transcribed_text}")
+        st.markdown(f"**Translated:** {translated_input}")
+        st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
+        bhashini_master.speak(translated_response, source_language=language_code)
 
-            st.markdown(f"**You:** {transcribed_text}")
-            st.markdown(f"**Translated:** {translated_input}")
-            st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
-
-            bhashini_master.speak(translated_response, source_language=language_code)
-            st.session_state.audio_processed = True
-            logging.info("Audio processed and response generated.")
+        st.session_state.audio_processed = True
+        logging.info("Audio processed and response generated.")
     else:
         st.write("Error: Audio transcription failed.")
         logging.error("Audio transcription failed.")
 
     if "recorded_audio" in st.session_state:
         del st.session_state["recorded_audio"]
-        logging.info("Cleared recorded audio from session state.")
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
-            logging.info("Temporary audio file deleted.")
         except Exception as e:
             st.error(f"Failed to delete audio file: {e}")
             logging.error(f"Failed to delete audio file: {e}")
 
-# Manual text input handling
-if user_query and not st.session_state.audio_processed:
+# TEXT INPUT PROCESSING
+if user_query:
+    st.session_state.input_mode = "text"
+    st.session_state.audio_processed = False
 
-    # Translate to English
-    translated_input = gemini_translate_one_word(
-        user_query,
-        source_language=language_code,
-        target_language="English"
-    )
-    print("user_query",user_query)
-    print("translated_input",translated_input)
+if st.session_state.input_mode == "text" and user_query:
+    translated_input = gemini_translate_one_word(user_query, source_language=language_code, target_language="en")
 
     with st.spinner("Generating response..."):
         response_in_english = get_response(translated_input)
+        translated_response = gemini_translate_one_word(response_in_english, source_language="en", target_language=language_code)
 
-        # Translate back to original language
-        translated_response = gemini_translate_one_word(
-            response_in_english,
-            source_language="English",
-            target_language=language_code
-        )
+    st.session_state.chat_history.append(HumanMessage(content=user_query))
+    st.session_state.chat_history.append(AIMessage(content=translated_response or "Translation failed."))
 
-        # Show chat in UI
-        st.session_state.chat_history.append(HumanMessage(content=user_query))
-        if translated_response is not None:
-            st.session_state.chat_history.append(AIMessage(content=translated_response))
-        else:
-            st.warning("Translation failed or returned no result.")
-            
-        st.markdown(f"**You:** {user_query}")
-        st.markdown(f"**Translated:** {translated_input}")
-        st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
+    st.markdown(f"**You:** {user_query}")
+    st.markdown(f"**Translated:** {translated_input}")
+    st.markdown(f"🤖 **सेवा सहायक:** {translated_response}")
 
-        bhashini_master.speak(translated_response, source_language=language_code)
-        logging.info("Processed manual text input.")
+    bhashini_master.speak(translated_response, source_language=language_code)
+    logging.info("Processed manual text input.")
+
 
 # Sidebar for Chat History
 footer = """
