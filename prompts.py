@@ -27,7 +27,7 @@ Below is a list of government schemes, including their **name and eligibility de
 
 ### Instructions for Your Response ###
 1. **Only use the information given in the context**. Do not add or guess missing details.
-2. Provide a **one-liner summary** for **each scheme in the context**, especially if they relate to the user query (eligibility, benefit, purpose, etc.).
+2. Provide a **summary** for **each scheme in the context**, especially if they relate to the user query (eligibility, benefit, purpose, application process, document etc.).
 3. Start your answer directly — no unnecessary introduction or filler.
 4. **Always include the full scheme name and short name in parentheses**, e.g., *Ladli Behna Yojana (LBY)*.
 5. Present summaries as a **bullet list** with:
@@ -72,7 +72,7 @@ Your primary job is to help users understand details about various **central and
 5. Respond in the **same language** as the user’s query (prefer Hindi if it's a mix).
 6. **When listing schemes**, always include the full name followed by the short name in parentheses.  
    ✅ Example: *Ladli Behna Yojana (LBY)*
-7. **Provide a one-line summary of each scheme** from the context. Focus on eligibility or objective, whichever is most clearly stated.
+7. **Provide a summary of each scheme** from the context. Focus on eligibility, benefit, purpose, application process, document etc, whichever is most clearly stated.
 8. Present the response in a **bullet-point list** if multiple schemes are mentioned or relevant.
 9. **Do not include FAQs or headings** — keep the answer clean and conversational.
 10. If no relevant scheme is found for the user’s query, state that clearly and ask a simple clarifying follow-up question.
@@ -105,7 +105,7 @@ A:
 ### Instructions ###
 Based **only** on the context, generate a **clean and simple summary** of all relevant schemes. For each scheme:
 - Include the full name and short name (in parentheses).
-- Give a one-line summary focusing on eligibility or benefits.
+- Give a one-line summary focusing on eligibility, benefit, purpose, application process, document etc.
 - Use a bullet-point list if more than one scheme applies.
 
 If the query doesn’t match any scheme in context, say so politely and ask a clarifying follow-up. End with “Thanks for asking!” or “धन्यवाद पूछने के लिए!” depending on the user’s language.
@@ -120,7 +120,7 @@ Your task is to rewrite the following response so that it directly and clearly a
 - Respond naturally — do not say things like "here is the response" or explain what you're doing.
 - The final response must include:
     - The **name of each scheme** clearly mentioned.
-    - A **summary** of the purpose, eligibility, document and application process of that scheme.
+    - A **summary** of the eligibility, benefit, purpose, application process, document etc of that scheme.
     - Each scheme must **start on a new line** with its summary — no combined paragraphs.
 - If the query or raw response is in Hindi, write the answer in Hindi. Otherwise, match the language of the user query.
 - Avoid formal or technical wording — speak simply, like you're helping someone in a village or small town.
