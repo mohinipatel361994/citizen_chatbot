@@ -120,7 +120,7 @@ Your task is to rewrite the following response so that it directly and clearly a
 - Respond naturally — do not say things like "here is the response" or explain what you're doing.
 - The final response must include:
     - The **name of each scheme** clearly mentioned.
-    - A **1-line summary** of the purpose or eligibility of that scheme.
+    - A **summary** of the purpose, eligibility, document and application process of that scheme.
     - Each scheme must **start on a new line** with its summary — no combined paragraphs.
 - If the query or raw response is in Hindi, write the answer in Hindi. Otherwise, match the language of the user query.
 - Avoid formal or technical wording — speak simply, like you're helping someone in a village or small town.
